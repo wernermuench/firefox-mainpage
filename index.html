@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startseite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+  :root {
+    --bg:      #0d0d10;
+    --surface: #16161c;
+    --border:  rgba(255,255,255,0.07);
+    --text:    #eceae4;
+    --muted:   rgba(236,234,228,0.38);
+    --accent:  #6b8cba;
+    --hover:   rgba(255,255,255,0.05);
+    --r:       12px;
+    --font:    'Outfit', sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg:      #f2f1ee;
+    --surface: #ffffff;
+    --border:  rgba(0,0,0,0.08);
+    --text:    #1a1a20;
+    --muted:   rgba(26,26,32,0.45);
+    --accent:  #4a72a8;
+    --hover:   rgba(0,0,0,0.04);
+  }
+
+  .theme-btn {
+    position: fixed;
+    top: 1rem; right: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: auto;
+    height: auto;
+    padding: 5px 11px;
+    display: flex; align-items: center; gap: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font);
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    z-index: 100;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5vh 2rem 4rem;
+    gap: 2.6rem;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse 70% 45% at 15% 5%, rgba(107,140,186,0.06) 0%, transparent 55%);
+    pointer-events:none; z-index:0;
+  }
+
+  .wrap { position:relative; z-index:1; width:100%; max-width:980px; }
+
+  /* ── Top: Uhr + Wetter ── */
+  .top-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  #clock {
+    font-size: clamp(5rem, 13vw, 9rem);
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  #greeting, #date-str {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  #greeting { margin-top: 0.6rem; }
+  #date-str  { margin-top: 0.2rem; }
+
+  /* ── Wetter ── */
+  #weather { text-align: right; padding-bottom: 0.1rem; }
+
+  #w-temp {
+    font-size: 5.5rem;
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  #w-desc { font-size: 1.05rem; color: var(--muted); font-weight: 300; margin-top:0.4rem; }
+  #w-city { font-size: 0.85rem; color: var(--muted); font-weight: 300; opacity:.65; margin-top:0.2rem; text-transform:uppercase; letter-spacing:0.07em; }
+  #w-hi-lo { font-size: 0.92rem; color: var(--muted); font-weight: 300; margin-top:0.2rem; opacity:.6; }
+  #w-uv { font-size: 0.92rem; font-weight: 300; margin-top:0.15rem; }
+  #w-rain-prob { font-size: 0.92rem; color: var(--muted); font-weight: 300; margin-top:0.15rem; opacity:.7; }
+
+  /* ── Suche ── */
+  .search-wrap {
+    display: flex; align-items: center;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 50px;
+    padding: 0 1.2rem;
+    gap: 0.75rem;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .search-wrap:focus-within { border-color: rgba(107,140,186,0.4); }
+
+  .s-icon { width:15px; height:15px; fill:none; stroke:var(--muted); stroke-width:2; stroke-linecap:round; flex-shrink:0; }
+
+  #search {
+    background:none; border:none; outline:none;
+    color:var(--text); font-family:var(--font);
+    font-size:1.05rem; font-weight:300;
+    width:100%; padding:0.95rem 0;
+  }
+  #search::placeholder { color:var(--muted); }
+
+  .eng-wrap { display:flex; gap:4px; flex-shrink:0; }
+  .eng-btn {
+    background:none; border:0.5px solid transparent; border-radius:6px;
+    color:var(--muted); font-family:var(--font); font-size:0.67rem;
+    font-weight:300; cursor:pointer; padding:3px 7px;
+    letter-spacing:0.05em; transition:all 0.15s;
+  }
+  .eng-btn.active { border-color:var(--accent); color:var(--accent); }
+  .eng-btn:hover:not(.active) { color:var(--text); border-color:var(--border); }
+
+  /* ── Kategorien ── */
+  .cat-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:1rem; }
+  .cat-btn {
+    background:none; border:0.5px solid var(--border); border-radius:20px;
+    color:var(--muted); font-family:var(--font); font-size:0.8rem;
+    font-weight:300; cursor:pointer; padding:5px 16px;
+    transition:all 0.15s; letter-spacing:0.05em;
+  }
+  .cat-btn.active { border-color:var(--accent); color:var(--accent); }
+  .cat-btn:hover:not(.active) { color:var(--text); border-color:rgba(255,255,255,0.18); }
+
+  /* ── Bookmark-Grid ── */
+  .bm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: 11px;
+  }
+
+  .bm-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.2rem 0.5rem 1rem;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.65rem;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+  .bm-card:hover { background:var(--hover); border-color:rgba(255,255,255,0.13); transform:translateY(-2px); }
+  .bm-card:active { transform:translateY(0); }
+
+  .bm-icon { width:40px; height:40px; border-radius:9px; object-fit:contain; }
+
+  .bm-fallback {
+    width:40px; height:40px; border-radius:9px;
+    background:rgba(107,140,186,0.15);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:500; color:var(--accent);
+  }
+
+  .bm-name {
+    font-size:0.78rem; color:var(--muted); text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:105px; font-weight:300;
+  }
+  .bm-card:hover .bm-name { color:var(--text); }
+
+  /* ── Wetter-Detail-Panel ── */
+  #weather-panel { display:none; width:100%; }
+  #todo-panel { display:none; width:100%; }
+
+  .wx-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+  }
+  .wx-grid .wx-card.full { grid-column: 1 / -1; }
+
+  .wx-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.1rem 1.3rem 1rem;
+  }
+
+  .wx-card-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 1rem;
+  }
+
+  .wx-chart { width:100%; overflow:visible; display:block; }
+
+  .wx-tomorrow-row {
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .wx-tomorrow-temp {
+    font-size: 3rem; font-weight:200; letter-spacing:-0.03em;
+  }
+  .wx-tomorrow-info { text-align:right; }
+  .wx-tomorrow-desc { font-size:0.88rem; color:var(--muted); font-weight:300; }
+  .wx-tomorrow-hilo { font-size:0.8rem; color:var(--muted); font-weight:300; margin-top:0.3rem; opacity:.6; }
+  .wx-tomorrow-uv   { font-size:0.8rem; font-weight:300; margin-top:0.2rem; }
+
+  /* 4-day forecast grid */
+  .wx-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 11px;
+  }
+  .wx-forecast-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 1rem 1rem 0.9rem;
+    display: flex; flex-direction: column; gap: 0.35rem;
+  }
+  .wx-fc-day   { font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:300; }
+  .wx-fc-temp  { font-size:2rem; font-weight:200; letter-spacing:-0.02em; line-height:1; margin-top:0.3rem; }
+  .wx-fc-desc  { font-size:0.75rem; color:var(--muted); font-weight:300; }
+  .wx-fc-hilo  { font-size:0.72rem; color:var(--muted); font-weight:300; opacity:.6; }
+  .wx-fc-uv    { font-size:0.72rem; font-weight:300; margin-top:0.1rem; }
+  .wx-fc-rain  { font-size:0.72rem; color:var(--muted); font-weight:300; opacity:.7; }
+
+  /* ── Uni Stundenplan ── */
+  #uni-panel { display:none; width:100%; margin-top: 1.5rem; }
+
+  .uni-ical-setup {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--r); padding: 1.2rem 1.4rem; margin-bottom: 11px;
+    display: flex; flex-direction: column; gap: 0.6rem;
+  }
+  .uni-ical-setup p { font-size:0.82rem; color:var(--muted); font-weight:300; line-height:1.6; }
+  .uni-ical-setup code { font-size:0.75rem; background:rgba(255,255,255,0.06); padding:1px 7px; border-radius:4px; color:var(--accent); }
+  .ical-input-row { display:flex; gap:8px; }
+  .ical-url-input {
+    flex:1; background:var(--bg); border:0.5px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:var(--font); font-size:0.82rem; font-weight:300;
+    padding:0.5rem 0.9rem; outline:none; transition:border-color .2s;
+  }
+  .ical-url-input:focus { border-color:rgba(107,140,186,0.4); }
+  .ical-url-input::placeholder { color:var(--muted); }
+  .ical-save-btn {
+    background:var(--accent); border:none; border-radius:8px; color:#fff;
+    font-family:var(--font); font-size:0.82rem; font-weight:400; cursor:pointer;
+    padding:0.5rem 1.1rem; transition:opacity .15s; white-space:nowrap;
+  }
+  .ical-save-btn:hover { opacity:.8; }
+
+  .timetable-tabs { display:flex; gap:6px; margin-bottom:0.8rem; flex-wrap:wrap; }
+  .tt-tab {
+    background:none; border:0.5px solid var(--border); border-radius:20px;
+    color:var(--muted); font-family:var(--font); font-size:0.72rem; font-weight:300;
+    cursor:pointer; padding:4px 14px; transition:all .15s; letter-spacing:0.04em;
+  }
+  .tt-tab.active { border-color:var(--accent); color:var(--accent); }
+  .tt-tab:hover:not(.active) { color:var(--text); border-color:rgba(255,255,255,0.18); }
+
+  /* ── Stundenplan Grid ── */
+  .tt-wrap {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+
+  /* Header row */
+  .tt-header {
+    display: flex;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .tt-header-corner { width: 48px; flex-shrink: 0; }
+  .tt-header-day {
+    flex: 1;
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 300;
+    padding: 0.55rem 4px;
+    border-left: 0.5px solid var(--border);
+  }
+  .tt-header-day.today { color: var(--accent); }
+
+  /* Body */
+  .tt-body {
+    display: flex;
+    overflow-y: auto;
+    max-height: 600px;
+    position: relative;
+  }
+
+  /* Time axis */
+  .tt-time-axis {
+    width: 48px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .tt-time-slot {
+    height: 52px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-right: 8px;
+    padding-top: 0px;
+    position: relative;
+  }
+  .tt-time-slot span {
+    font-size: 0.62rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1;
+    position: relative;
+    top: -6px; /* sit on the grid line */
+  }
+
+  /* Day columns */
+  .tt-day-col {
+    flex: 1;
+    border-left: 0.5px solid var(--border);
+    position: relative;
+  }
+  .tt-hour-line {
+    height: 52px;
+    border-top: 0.5px solid rgba(255,255,255,0.04);
+    box-sizing: border-box;
+  }
+  .tt-hour-line.half {
+    border-top: 0.5px dashed rgba(255,255,255,0.025);
+  }
+
+  /* Event blocks */
+  .tt-event-block {
+    position: absolute;
+    left: 2px; right: 2px;
+    background: rgba(107,140,186,0.18);
+    border-left: 2px solid rgba(107,140,186,0.7);
+    border-radius: 4px;
+    padding: 3px 5px;
+    overflow: hidden;
+    cursor: default;
+    transition: background 0.15s;
+    box-sizing: border-box;
+  }
+  .tt-event-block:hover { background: rgba(107,140,186,0.30); }
+  .tt-ev-title { font-size: 0.7rem; font-weight: 400; color: var(--text); white-space: normal; overflow: hidden; word-break: break-word; line-height: 1.35; }
+  .tt-ev-time  { font-size: 0.6rem; color: rgba(236,234,228,0.5); font-weight: 300; }
+  .tt-ev-room  { font-size: 0.58rem; color: rgba(236,234,228,0.4); font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Google Tasks connect */
+  .gtask-connect {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; gap: 0.8rem; text-align: center;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .gtask-connect p { font-size:0.82rem; color:var(--muted); font-weight:300; line-height:1.6; max-width:400px; }
+  .gtask-connect code { font-size:0.75rem; background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px; color:var(--accent); }
+  .gtask-btn {
+    background: var(--accent); border: none; border-radius: 8px;
+    color: #fff; font-family: var(--font); font-size:0.85rem; font-weight:400;
+    cursor: pointer; padding: 0.55rem 1.4rem; transition: opacity 0.15s;
+  }
+  .gtask-btn:hover { opacity:.8; }
+  .gtask-btn:disabled { opacity:.4; cursor:default; }
+  .gtask-status { font-size:0.72rem; color:var(--muted); font-weight:300; }
+
+  /* ── Tasks ── */
+  .sec-label { font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); font-weight:300; margin-bottom:0.65rem; }
+  .tasks-box { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); overflow:hidden; }
+
+  .task-input-row {
+    display:flex; align-items:center; gap:10px;
+    padding:0.85rem 1.1rem;
+    border-bottom:0.5px solid var(--border);
+  }
+  .task-input-row svg { flex-shrink:0; opacity:.35; }
+  #task-input {
+    background:none; border:none; outline:none;
+    color:var(--text); font-family:var(--font);
+    font-size:0.92rem; font-weight:300; width:100%;
+  }
+  #task-input::placeholder { color:var(--muted); }
+
+  #task-list { list-style:none; }
+
+  .task-item {
+    display:flex; align-items:center; gap:12px;
+    padding:0.75rem 1.1rem;
+    border-bottom:0.5px solid var(--border);
+    transition:background 0.1s;
+  }
+  .task-item:last-child { border-bottom:none; }
+  .task-item:hover { background:var(--hover); }
+
+  .task-cb {
+    width:17px; height:17px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.25);
+    background:none; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .task-cb:hover { border-color:var(--accent); }
+  .task-cb.done { border-color:var(--accent); background:var(--accent); }
+  .task-cb.done::after { content:''; display:block; width:5px; height:9px; border:2px solid var(--bg); border-top:none; border-left:none; transform:rotate(45deg) translate(-1px,-1px); }
+
+  .task-text {
+    flex:1; font-size:0.92rem; font-weight:300;
+    color:var(--text); cursor:default;
+    transition:color 0.15s;
+  }
+  .task-text.done { color:var(--muted); text-decoration:line-through; }
+
+  .task-del {
+    background:none; border:none; cursor:pointer;
+    color:var(--muted); font-size:1rem; line-height:1;
+    opacity:0; transition:opacity 0.15s;
+    padding:2px 4px;
+  }
+  .task-item:hover .task-del { opacity:.5; }
+  .task-del:hover { opacity:1 !important; color:var(--text); }
+
+  .tasks-empty { padding:1.2rem 1.1rem; font-size:0.88rem; color:var(--muted); font-weight:300; }
+
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ── Mensa ── */
+  #mensa-panel { display:none; width:100%; }
+  .mensa-nav { display:flex; gap:6px; margin-bottom:0.8rem; flex-wrap:wrap; }
+  .mensa-nav-btn {
+    background:none; border:0.5px solid var(--border); border-radius:20px;
+    color:var(--muted); font-family:var(--font); font-size:0.72rem; font-weight:300;
+    cursor:pointer; padding:4px 14px; transition:all .15s; letter-spacing:0.04em;
+  }
+  .mensa-nav-btn.active { border-color:var(--accent); color:var(--accent); }
+  .mensa-nav-btn:hover:not(.active) { color:var(--text); border-color:rgba(255,255,255,0.18); }
+  .mensa-day-label { font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); font-weight:300; margin-bottom:0.6rem; }
+  .mensa-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:10px; }
+  .mensa-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:0.9rem 1.1rem; }
+  .mensa-category { font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); font-weight:300; margin-bottom:0.3rem; }
+  .mensa-name { font-size:0.88rem; font-weight:400; color:var(--text); line-height:1.4; }
+  .mensa-price { font-size:0.75rem; color:var(--muted); font-weight:300; margin-top:0.4rem; }
+  .mensa-notes { font-size:0.7rem; color:var(--muted); font-weight:300; margin-top:0.2rem; opacity:.7; }
+  .mensa-empty { font-size:0.85rem; color:var(--muted); font-weight:300; padding:1rem 0; }
+</style>
+</head>
+<body>
+
+<script>
+/* ══ LESEZEICHEN — hier anpassen ══ */
+const BOOKMARKS = [
+	{ url:'https://studip.tu-braunschweig.de',       	name:'Stud.IP',        	cat:'Uni' }, 
+	{ url:'https://connect.tu-braunschweig.de',       	name:'TUconnect',       cat:'Uni' },
+	{ url:'https://mail.tu-braunschweig.de/', 		name:'Outlook', 	cat:'Uni' },
+	{ url:'https://katalog.ub.tu-braunschweig.de/vufind/',  name:'Bibliothek',     	cat:'Uni' },
+	{ url:'https://www.tu-braunschweig.de',          	name:'TU BS',          	cat:'Uni' },
+
+	{ url:'https://github.com',                      	name:'GitHub',         	cat:'Informatik' },
+	{ url:'https://gitlab.com',                      	name:'GitLab',         	cat:'Informatik' },
+	{ url:'https://stackoverflow.com',              	name:'Stack Overflow', 	cat:'Informatik' },
+
+	{ url:'https://gemini.google.com',               	name:'Gemini',         	cat:'KI' },
+	{ url:'https://chatgpt.com',                     	name:'ChatGPT',       	cat:'KI' },
+	{ url:'https://claude.ai',                       	name:'Claude',         	cat:'KI' },
+	{ url:'https://www.deepl.com/de/translator',            name:'DeepL',     	cat:'KI' },
+
+	{ url:'https://youtube.com',                     	name:'YouTube',        	cat:'Streaming' },
+	{ url:'https://primevideo.com',                  	name:'Prime Video',    	cat:'Streaming' },
+	{ url:'https://netflix.com',                     	name:'Netflix',        	cat:'Streaming' },
+	{ url:'https://disneyplus.com',                  	name:'Disney+',        	cat:'Streaming' },
+	{ url:'https://open.spotify.com',                	name:'Spotify',        	cat:'Streaming' },
+	{ url:'https://twitch.tv',                       	name:'Twitch',         	cat:'Streaming' },
+	
+	{ url:'https://mail.google.com/mail',                   name:'Gmail',         	cat:'Google' },
+	{ url:'https://www.google.com/maps',                    name:'Maps',         	cat:'Google' },
+	{ url:'https://photos.google.com',                      name:'Fotos',         	cat:'Google' },
+	{ url:'https://calendar.google.com/calendar/u/0/r',           name:'Kalender',        cat:'Google' },
+	{ url:'https://docs.google.com/document/',              name:'Google Docs',     cat:'Google' },
+	{ url:'https://docs.google.com/spreadsheets',           name:'Google Tabellen', cat:'Google' },
+	{ url:'https://keep.google.com/',                   	name:'Google Notizen',  cat:'Google' },
+	{ url:'https://tasks.google.com/tasks/',                name:'Tasks',         	cat:'Google' },
+	
+	{ url:'https://web.whatsapp.com',                	name:'WhatsApp',       	cat:'Social' },
+	{ url:'https://instagram.com',                   	name:'Instagram',      	cat:'Social' },
+	{ url:'https://reddit.com',                      	name:'Reddit',         	cat:'Social' },
+	{ url:'https://linkedin.com',                    	name:'LinkedIn',       	cat:'Social' },
+	
+	{ url:'https://access.ing.de/delogin/w/login',          name:'ING',       	cat:'Finanzielles' },
+	{ url:'https://www.paypal.com/signin',                  name:'PayPal',       	cat:'Finanzielles' },
+];
+
+const ENGINES = {
+  'Google': 'https://www.google.com/search?q=',
+  'DDG':    'https://duckduckgo.com/?q='
+};
+</script>
+
+<button class="theme-btn" id="theme-btn">🌙 Hell/Dunkel</button>
+
+<div class="wrap" style="display:flex;flex-direction:column;gap:2.4rem;">
+
+  <div class="top-row">
+    <div>
+      <div id="clock">00:00</div>
+      <div id="greeting"></div>
+      <div id="date-str"></div>
+    </div>
+    <div id="weather">
+      <div id="w-temp" style="color:var(--muted);font-size:1rem">–</div>
+      <div id="w-desc"></div>
+      <div id="w-city"></div>
+      <div id="w-hi-lo"></div>
+      <div id="w-uv"></div>
+      <div id="w-rain-prob"></div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <svg class="s-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+    <input id="search" type="text" placeholder="Suchen …" autocomplete="off" spellcheck="false">
+    <div class="eng-wrap" id="eng-wrap"></div>
+  </div>
+
+  <div>
+    <div class="cat-row" id="cat-row"></div>
+    <div class="bm-grid" id="grid"></div>
+    <div id="weather-panel">
+      <div style="display:flex;flex-direction:column;gap:11px;">
+        <div class="mensa-nav" id="wx-day-nav"></div>
+        <div class="wx-card">
+          <div class="wx-card-title" id="wx-temp-title">Temperaturverlauf</div>
+          <svg class="wx-chart" id="wx-temp-chart" height="200" viewBox="0 0 900 200"></svg>
+        </div>
+        <div class="wx-card">
+          <div class="wx-card-title" id="wx-rain-title">Niederschlag (mm/h)</div>
+          <svg class="wx-chart" id="wx-rain-chart" height="140" viewBox="0 0 900 140"></svg>
+        </div>
+        <div class="wx-card">
+          <div class="wx-card-title" id="wx-uv-title">UV-Index Verlauf</div>
+          <svg class="wx-chart" id="wx-uv-chart" height="160" viewBox="0 0 900 160"></svg>
+        </div>
+      </div>
+    </div>
+    <div id="uni-panel" style="display:none;">
+      <div class="uni-ical-setup" id="ical-setup">
+        <div class="sec-label">Stud.IP Stundenplan einbinden</div>
+        <p>
+          1. Öffne Stud.IP → <code>Kalender</code> → <code>Kalender exportieren</code><br>
+          2. Kopiere die <strong>iCal-URL</strong> und füge sie hier ein:
+        </p>
+        <div class="ical-input-row">
+          <input class="ical-url-input" id="ical-url-input" type="text" placeholder="https://studip.tu-braunschweig.de/…/ical?token=…">
+          <button class="ical-save-btn" onclick="saveIcalUrl()">Speichern</button>
+        </div>
+      </div>
+      <div class="tt-wrap">
+        <div class="tt-header">
+          <div class="tt-header-corner"></div>
+          <div class="tt-header-day" id="tt-hd-1">Mo</div>
+          <div class="tt-header-day" id="tt-hd-2">Di</div>
+          <div class="tt-header-day" id="tt-hd-3">Mi</div>
+          <div class="tt-header-day" id="tt-hd-4">Do</div>
+          <div class="tt-header-day" id="tt-hd-5">Fr</div>
+        </div>
+        <div class="tt-body">
+          <div class="tt-time-axis" id="tt-time-axis"></div>
+          <div class="tt-day-col" id="tt-col-1"></div>
+          <div class="tt-day-col" id="tt-col-2"></div>
+          <div class="tt-day-col" id="tt-col-3"></div>
+          <div class="tt-day-col" id="tt-col-4"></div>
+          <div class="tt-day-col" id="tt-col-5"></div>
+        </div>
+      </div>
+    </div>
+    <div id="todo-panel" style="display:none;">
+      <!--
+        ══ GOOGLE TASKS EINRICHTUNG ══════════════════════════
+        1. Öffne: https://console.cloud.google.com
+        2. Neues Projekt erstellen
+        3. "APIs & Dienste" → "Bibliothek" → "Tasks API" aktivieren
+        4. "APIs & Dienste" → "Anmeldedaten" → "OAuth 2.0-Client-IDs" erstellen
+           → Typ: Webanwendung
+           → Autorisierter JavaScript-Ursprung: http://localhost:8000
+        5. Client-ID unten eintragen (GOOGLE_CLIENT_ID)
+        6. Datei über lokalen Server öffnen:
+           python3 -m http.server 8000
+           dann: http://localhost:8000/startseite.html
+        ════════════════════════════════════════════════════ -->
+      <div class="tasks-box">
+        <div id="gtask-connect-area" class="gtask-connect">
+          <p>Verbinde dich mit Google, um deine Liste <strong>„Meine Aufgaben"</strong> zu synchronisieren.<br>
+          Oder nutze die Liste ohne Verbindung — sie wird lokal gespeichert.</p>
+          <button class="gtask-btn" id="gtask-auth-btn" onclick="signInGoogle()">Mit Google verbinden</button>
+          <span class="gtask-status" id="gtask-status"></span>
+        </div>
+        <div class="task-input-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <input id="task-input" type="text" placeholder="Aufgabe hinzufügen …" autocomplete="off">
+        </div>
+        <ul id="task-list"></ul>
+      </div>
+    </div>
+    <div id="mensa-panel" style="display:none;">
+      <div class="mensa-nav" id="mensa-nav"></div>
+      <div class="mensa-day-label" id="mensa-day-label"></div>
+      <div class="mensa-grid" id="mensa-grid"></div>
+    </div>
+  </div>
+
+
+
+</div>
+
+<script>
+/* ── Uhr ── */
+function tick() {
+  const n = new Date();
+  const h = String(n.getHours()).padStart(2,'0'), m = String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m;
+  const hr = n.getHours();
+  document.getElementById('greeting').textContent =
+    hr < 11 ? 'Guten Morgen' : hr < 14 ? 'Guten Tag' : hr < 18 ? 'Guten Nachmittag' : 'Guten Abend';
+  const D = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const M = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  document.getElementById('date-str').textContent = D[n.getDay()] + ', ' + n.getDate() + '. ' + M[n.getMonth()];
+}
+tick(); setInterval(tick, 10000);
+
+/* ── Wetter ── */
+const WMO = {0:'Klar',1:'Meist klar',2:'Teilw. bewölkt',3:'Bedeckt',45:'Nebel',48:'Raureifnebel',51:'Nieselregen',53:'Nieselregen',55:'Nieselregen',61:'Leichter Regen',63:'Regen',65:'Starker Regen',71:'Leichter Schnee',73:'Schnee',75:'Starker Schnee',80:'Regenschauer',81:'Schauer',82:'Starke Schauer',95:'Gewitter',96:'Gewitter',99:'Starkes Gewitter'};
+
+let wxData = null; // global weather data cache
+
+async function loadWeather(lat, lon, city) {
+  try {
+    const d = await (await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,weathercode,apparent_temperature,uv_index` +
+      `&hourly=temperature_2m,uv_index,precipitation` +
+      `&daily=temperature_2m_max,temperature_2m_min,uv_index_max,weathercode,precipitation_probability_max` +
+      `&timezone=auto&forecast_days=7`
+    )).json();
+    wxData = d;
+    const c = d.current;
+    document.getElementById('w-temp').textContent = Math.round(c.temperature_2m) + '°';
+    document.getElementById('w-temp').style.color = '';
+    document.getElementById('w-temp').style.fontSize = '';
+    document.getElementById('w-desc').textContent = WMO[c.weathercode] || '';
+    document.getElementById('w-city').textContent = city;
+    document.getElementById('w-hi-lo').textContent =
+      '↑' + Math.round(d.daily.temperature_2m_max[0]) + '°  ↓' + Math.round(d.daily.temperature_2m_min[0]) + '°  Gefühlt ' + Math.round(c.apparent_temperature) + '°';
+    // current UV index (not daily max)
+    const uv = parseFloat(c.uv_index).toFixed(1);
+    const uvRound = Math.round(uv);
+    const uvLabel = uvRound <= 2 ? 'Niedrig' : uvRound <= 5 ? 'Mittel' : uvRound <= 7 ? 'Hoch' : uvRound <= 10 ? 'Sehr hoch' : 'Extrem';
+    const uvColor2 = uvRound <= 2 ? '#6db87a' : uvRound <= 5 ? '#c9a96e' : uvRound <= 7 ? '#e07c45' : uvRound <= 10 ? '#c95f5f' : '#a06bbf';
+    const uvEl = document.getElementById('w-uv');
+    uvEl.textContent = 'UV ' + uv + ' · ' + uvLabel;
+    uvEl.style.color = uvColor2;
+    const rainProb = d.daily.precipitation_probability_max?.[0];
+    if (rainProb != null) {
+      document.getElementById('w-rain-prob').textContent = '☂ ' + rainProb + '%';
+    }
+  } catch(_) {}
+}
+
+/* Ort hier anpassen: latitude, longitude, Stadtname */
+loadWeather(52.2689, 10.5268, 'Braunschweig');
+
+/* ── Suchmaschinen ── */
+let ae = Object.keys(ENGINES)[0];
+const ew = document.getElementById('eng-wrap');
+Object.keys(ENGINES).forEach(k => {
+  const b = document.createElement('button');
+  b.className = 'eng-btn' + (k === ae ? ' active' : '');
+  b.textContent = k;
+  b.onclick = () => { ae = k; document.querySelectorAll('.eng-btn').forEach(x => x.classList.toggle('active', x.textContent === k)); };
+  ew.appendChild(b);
+});
+document.getElementById('search').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const q = e.target.value.trim(); if (q) location.href = ENGINES[ae] + encodeURIComponent(q); }
+});
+
+/* ── Kategorien ── */
+const bmCats = ['Alle', ...new Set(BOOKMARKS.map(b => b.cat))];
+const allCats = [...bmCats, 'Wetter', 'Mensa', 'To-Do'];
+let ac = 'Alle';
+
+function renderCats() {
+  const r = document.getElementById('cat-row'); r.innerHTML = '';
+  allCats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'cat-btn' + (c === ac ? ' active' : '');
+    b.textContent = c;
+    b.onclick = () => { ac = c; renderCats(); renderGrid(); };
+    r.appendChild(b);
+  });
+}
+
+/* ── Grid / Panels ── */
+function renderGrid() {
+  const g  = document.getElementById('grid');
+  const wp = document.getElementById('weather-panel');
+  const tp = document.getElementById('todo-panel');
+  const up = document.getElementById('uni-panel');
+  const mp = document.getElementById('mensa-panel');
+  g.style.display=''; wp.style.display='none'; tp.style.display='none'; up.style.display='none'; mp.style.display='none';
+
+  if (ac === 'Wetter') { g.style.display='none'; wp.style.display='block'; renderWeatherDetail(); return; }
+  if (ac === 'To-Do')  { g.style.display='none'; tp.style.display='block'; return; }
+  if (ac === 'Mensa')  { g.style.display='none'; mp.style.display='block'; loadMensa(); return; }
+  // Bookmarks grid
+  g.innerHTML = '';
+  (ac === 'Alle' ? BOOKMARKS : BOOKMARKS.filter(b => b.cat === ac)).forEach(bm => {
+    const a = document.createElement('a'); a.className = 'bm-card'; a.href = bm.url;
+    let host = ''; try { host = new URL(bm.url).hostname; } catch(_) {}
+    const img = document.createElement('img');
+    img.className = 'bm-icon'; img.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    img.alt = bm.name; img.width = 40; img.height = 40;
+    img.onerror = () => { const fb = document.createElement('div'); fb.className = 'bm-fallback'; fb.textContent = bm.name[0].toUpperCase(); a.replaceChild(fb, img); };
+    const label = document.createElement('span'); label.className = 'bm-name'; label.textContent = bm.name;
+    a.appendChild(img); a.appendChild(label); g.appendChild(a);
+  });
+  // Show timetable below Uni bookmarks
+  if (ac === 'Uni') {
+    up.style.display = 'block';
+    renderTimetable();
+  }
+}
+
+/* ── SVG Linien-Chart mit Hover-Tooltip ── */
+function makeSvgChart(svg, values, labels, colorFn, unit, W=900, H=200, valFontSize=13, lblFontSize=12, minRange=0) {
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+  const pad = {l:36, r:16, t:32, b:44};
+  const w = W - pad.l - pad.r, h = H - pad.t - pad.b;
+  let min = Math.min(...values), max = Math.max(...values);
+  if (minRange > 0 && (max - min) < minRange) {
+    const mid = (max + min) / 2;
+    min = Math.max(0, mid - minRange / 2);
+    max = mid + minRange / 2;
+  }
+  const range = (max - min) || 1;
+  const pts = values.map((v,i) => [pad.l + i/(values.length-1)*w, pad.t + h - (Math.min(Math.max(v,min),max)-min)/range*h]);
+
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // gradient defs
+  const defs = document.createElementNS(NS,'defs');
+  const grad = document.createElementNS(NS,'linearGradient');
+  grad.id = 'g'+svg.id; grad.setAttribute('x1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y1','0'); grad.setAttribute('y2','1');
+  const s1 = document.createElementNS(NS,'stop'); s1.setAttribute('offset','0'); s1.setAttribute('stop-color',colorFn(max)); s1.setAttribute('stop-opacity','0.22');
+  const s2 = document.createElementNS(NS,'stop'); s2.setAttribute('offset','1'); s2.setAttribute('stop-color',colorFn(max)); s2.setAttribute('stop-opacity','0');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+  // area
+  const areaD = `M${pts[0][0]},${pad.t+h} ` + pts.map(p=>`L${p[0]},${p[1]}`).join(' ') + ` L${pts[pts.length-1][0]},${pad.t+h} Z`;
+  const area = document.createElementNS(NS,'path');
+  area.setAttribute('d', areaD); area.setAttribute('fill',`url(#g${svg.id})`);
+  svg.appendChild(area);
+
+  // line
+  const lineD = 'M' + pts.map(p=>p.join(',')).join(' L');
+  const line = document.createElementNS(NS,'path');
+  line.setAttribute('d', lineD); line.setAttribute('fill','none');
+  line.setAttribute('stroke', colorFn((max+min)/2)); line.setAttribute('stroke-width','2.2');
+  line.setAttribute('stroke-linecap','round'); line.setAttribute('stroke-linejoin','round');
+  svg.appendChild(line);
+
+  // static labels every 3h (always 00–21)
+  values.forEach((v, i) => {
+    const showDot   = i % 3 === 0;
+    const showLabel = i % 3 === 0;
+    if (!showDot) return;
+    const [x, y] = pts[i];
+    const dot = document.createElementNS(NS,'circle');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r','3.5');
+    dot.setAttribute('fill', colorFn(v)); svg.appendChild(dot);
+
+    const val = document.createElementNS(NS,'text');
+    val.setAttribute('x', x); val.setAttribute('y', y - 12);
+    val.setAttribute('text-anchor','middle'); val.setAttribute('font-size', valFontSize);
+    val.setAttribute('fill','rgba(236,234,228,0.75)'); val.setAttribute('font-family','Outfit,sans-serif');
+    val.setAttribute('font-weight','400');
+    val.textContent = (unit === '°' ? Math.round(v) : parseFloat(v).toFixed(1)) + unit; svg.appendChild(val);
+
+    if (labels && labels[i] && showLabel) {
+      const lbl = document.createElementNS(NS,'text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', H - 12);
+      lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-size', lblFontSize);
+      lbl.setAttribute('fill','rgba(236,234,228,0.35)'); lbl.setAttribute('font-family','Outfit,sans-serif');
+      lbl.setAttribute('font-weight','300');
+      lbl.textContent = labels[i]; svg.appendChild(lbl);
+    }
+  });
+
+  // hover overlay
+  const tooltip = document.createElementNS(NS,'g');
+  tooltip.id = svg.id + '-tt';
+  const ttBg = document.createElementNS(NS,'rect');
+  ttBg.setAttribute('rx','6'); ttBg.setAttribute('ry','6');
+  ttBg.setAttribute('fill','#1e1e28'); ttBg.setAttribute('stroke','rgba(255,255,255,0.1)');
+  ttBg.setAttribute('stroke-width','0.5'); ttBg.setAttribute('width','78'); ttBg.setAttribute('height','40');
+  const ttVal = document.createElementNS(NS,'text');
+  ttVal.setAttribute('font-size','16'); ttVal.setAttribute('font-weight','400');
+  ttVal.setAttribute('font-family','Outfit,sans-serif'); ttVal.setAttribute('fill','rgba(236,234,228,0.9)');
+  const ttLbl = document.createElementNS(NS,'text');
+  ttLbl.setAttribute('font-size','12'); ttLbl.setAttribute('font-weight','300');
+  ttLbl.setAttribute('font-family','Outfit,sans-serif'); ttLbl.setAttribute('fill','rgba(236,234,228,0.4)');
+  const ttLine = document.createElementNS(NS,'line');
+  ttLine.setAttribute('stroke','rgba(255,255,255,0.15)'); ttLine.setAttribute('stroke-width','1');
+  ttLine.setAttribute('stroke-dasharray','3,3');
+  tooltip.appendChild(ttLine); tooltip.appendChild(ttBg); tooltip.appendChild(ttVal); tooltip.appendChild(ttLbl);
+  tooltip.style.display = 'none';
+  svg.appendChild(tooltip);
+
+  // hover hit areas
+  const hitW = w / (values.length - 1);
+  values.forEach((v, i) => {
+    const [x, y] = pts[i];
+    const hit = document.createElementNS(NS,'rect');
+    hit.setAttribute('x', x - hitW/2); hit.setAttribute('y', pad.t);
+    hit.setAttribute('width', hitW); hit.setAttribute('height', h);
+    hit.setAttribute('fill','transparent'); hit.style.cursor = 'crosshair';
+    hit.addEventListener('mouseenter', () => {
+      tooltip.style.display = '';
+      const ttW = 78, ttH = 40;
+      let tx = x - ttW/2, ty = y - ttH - 16;
+      if (tx < pad.l) tx = pad.l;
+      if (tx + ttW > W - pad.r) tx = W - pad.r - ttW;
+      if (ty < 4) ty = y + 14;
+      ttBg.setAttribute('x', tx); ttBg.setAttribute('y', ty);
+      ttVal.setAttribute('x', tx + ttW/2); ttVal.setAttribute('y', ty + 18);
+      ttVal.setAttribute('text-anchor','middle'); ttVal.setAttribute('fill', colorFn(v));
+      ttVal.textContent = parseFloat(v).toFixed(1) + unit;
+      ttLbl.setAttribute('x', tx + ttW/2); ttLbl.setAttribute('y', ty + 33);
+      ttLbl.setAttribute('text-anchor','middle');
+      ttLbl.textContent = labels ? (labels[i] || '') : '';
+      ttLine.setAttribute('x1', x); ttLine.setAttribute('x2', x);
+      ttLine.setAttribute('y1', pad.t); ttLine.setAttribute('y2', pad.t + h);
+    });
+    hit.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    svg.appendChild(hit);
+  });
+}
+
+function uvColor(v) {
+  return v <= 2 ? '#6db87a' : v <= 5 ? '#c9a96e' : v <= 7 ? '#e07c45' : v <= 10 ? '#c95f5f' : '#a06bbf';
+}
+function tempColor(v) {
+  return v < 5 ? '#7eb8d4' : v < 15 ? '#6b8cba' : v < 25 ? '#c9a96e' : '#e07c45';
+}
+
+/* ── Wetter-Detail rendern ── */
+let wxSelectedDayIdx = 0; // 0 = heute, 1 = morgen, ...
+const WX_DAY_NAMES = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function renderWeatherDetail() {
+  if (!wxData) { setTimeout(renderWeatherDetail, 600); return; }
+  buildWxDayNav();
+  renderWxDay();
+}
+
+function buildWxDayNav() {
+  const nav = document.getElementById('wx-day-nav');
+  nav.innerHTML = '';
+  const days = wxData.daily.time;
+  days.forEach((dStr, idx) => {
+    const d = new Date(dStr + 'T12:00:00');
+    const btn = document.createElement('button');
+    btn.className = 'mensa-nav-btn' + (idx === wxSelectedDayIdx ? ' active' : '');
+    let label = WX_DAY_NAMES[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.';
+    if (idx === 0) label += ' (heute)';
+    else if (idx === 1) label += ' (morgen)';
+    btn.textContent = label;
+    btn.onclick = () => { wxSelectedDayIdx = idx; buildWxDayNav(); renderWxDay(); };
+    nav.appendChild(btn);
+  });
+}
+
+function renderWxDay() {
+  const d = wxData;
+  const dayStr = d.daily.time[wxSelectedDayIdx];
+  const dayDate = new Date(dayStr + 'T12:00:00');
+  const FULL = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const labelDay = wxSelectedDayIdx === 0 ? 'heute' : (wxSelectedDayIdx === 1 ? 'morgen' : FULL[dayDate.getDay()]);
+
+  document.getElementById('wx-temp-title').textContent = `Temperaturverlauf ${labelDay}`;
+  document.getElementById('wx-rain-title').textContent = `Niederschlag ${labelDay} (mm/h)`;
+  document.getElementById('wx-uv-title').textContent   = `UV-Index Verlauf ${labelDay}`;
+
+  // get hourly indices for this day
+  const allTimes = d.hourly.time;
+  const dayIdxs = allTimes.map((t,i) => t.startsWith(dayStr) ? i : -1).filter(i=>i>=0);
+
+  const temps  = dayIdxs.map(i => d.hourly.temperature_2m[i]);
+  const uv     = dayIdxs.map(i => d.hourly.uv_index[i]);
+  const rain   = dayIdxs.map(i => d.hourly.precipitation[i]);
+  const labels = dayIdxs.map(i => allTimes[i].slice(11,16));
+
+  makeSvgChart(
+    document.getElementById('wx-temp-chart'),
+    temps, labels, tempColor, '°', 900, 200, 15, 13, 0
+  );
+  makeSvgChartBar(
+    document.getElementById('wx-rain-chart'),
+    rain, labels, 900, 140, 15, 13
+  );
+  makeSvgChart(
+    document.getElementById('wx-uv-chart'),
+    uv, labels, uvColor, '', 900, 160, 15, 13, 5
+  );
+}
+
+renderCats(); renderGrid();
+
+/* ── Regen-Balken-Chart ── */
+function makeSvgChartBar(svg, values, labels, W=900, H=140, valFontSize=15, lblFontSize=13) {
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+  const NS = 'http://www.w3.org/2000/svg';
+  const pad = {l:36, r:16, t:20, b:36};
+  const w = W - pad.l - pad.r, h = H - pad.t - pad.b;
+  const max = Math.max(...values, 0.5);
+  const barW = w / values.length * 0.6;
+  const gap  = w / values.length;
+  const step = Math.max(1, Math.floor(values.length / 8));
+
+  // defs gradient
+  const defs = document.createElementNS(NS,'defs');
+  const grad = document.createElementNS(NS,'linearGradient');
+  grad.id = 'rain-g'; grad.setAttribute('x1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y1','0'); grad.setAttribute('y2','1');
+  const s1 = document.createElementNS(NS,'stop'); s1.setAttribute('offset','0'); s1.setAttribute('stop-color','#5b8fd4'); s1.setAttribute('stop-opacity','0.8');
+  const s2 = document.createElementNS(NS,'stop'); s2.setAttribute('offset','1'); s2.setAttribute('stop-color','#5b8fd4'); s2.setAttribute('stop-opacity','0.2');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+  values.forEach((v, i) => {
+    const x = pad.l + i * gap + gap/2 - barW/2;
+    const barH = (v / max) * h;
+    const y = pad.t + h - barH;
+    const rect = document.createElementNS(NS,'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', barW); rect.setAttribute('height', Math.max(barH, 1));
+    rect.setAttribute('rx', 2); rect.setAttribute('fill', 'url(#rain-g)');
+    svg.appendChild(rect);
+
+    if (i % step === 0) {
+      if (v > 0) {
+        const val = document.createElementNS(NS,'text');
+        val.setAttribute('x', x + barW/2); val.setAttribute('y', y - 5);
+        val.setAttribute('text-anchor','middle'); val.setAttribute('font-size', valFontSize);
+        val.setAttribute('fill','rgba(91,143,212,0.85)'); val.setAttribute('font-family','Outfit,sans-serif');
+        val.setAttribute('font-weight','300');
+        val.textContent = v.toFixed(1); svg.appendChild(val);
+      }
+      if (labels && labels[i]) {
+        const lbl = document.createElementNS(NS,'text');
+        lbl.setAttribute('x', x + barW/2); lbl.setAttribute('y', H - 8);
+        lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('font-size', lblFontSize);
+        lbl.setAttribute('fill','rgba(236,234,228,0.32)'); lbl.setAttribute('font-family','Outfit,sans-serif');
+        lbl.setAttribute('font-weight','300');
+        lbl.textContent = labels[i]; svg.appendChild(lbl);
+      }
+    }
+  });
+}
+
+/* ══ GOOGLE TASKS ══════════════════════════════════════════
+   Client-ID hier eintragen (aus Google Cloud Console):      */
+const GOOGLE_CLIENT_ID = 'DEINE_CLIENT_ID_HIER.apps.googleusercontent.com';
+/* ════════════════════════════════════════════════════════ */
+
+const TASKS_SCOPE = 'https://www.googleapis.com/auth/tasks';
+let gToken = null;
+let gTaskListId = null;
+let gTokenClient = null;
+let useGoogle = false;
+
+function signInGoogle() {
+  const btn = document.getElementById('gtask-auth-btn');
+  const status = document.getElementById('gtask-status');
+  if (GOOGLE_CLIENT_ID.includes('DEINE')) {
+    status.textContent = 'Bitte zuerst die Client-ID im HTML eintragen (siehe Kommentar im To-Do Panel).';
+    status.style.color = '#e07c45';
+    return;
+  }
+  if (!gTokenClient) {
+    gTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: TASKS_SCOPE,
+      callback: async (resp) => {
+        if (resp.error) { status.textContent = 'Fehler: ' + resp.error; return; }
+        gToken = resp.access_token;
+        localStorage.setItem('g_token', gToken);
+        btn.textContent = 'Verbunden ✓';
+        btn.disabled = true;
+        status.textContent = 'Lade Aufgaben …';
+        await findAndLoadGoogleTasks();
+      }
+    });
+  }
+  gTokenClient.requestAccessToken();
+}
+
+async function findAndLoadGoogleTasks() {
+  const status = document.getElementById('gtask-status');
+  try {
+    const r = await fetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
+      headers: {'Authorization': 'Bearer ' + gToken}
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error.message);
+    const list = data.items?.find(l => l.title === 'Meine Aufgaben') || data.items?.[0];
+    if (!list) { status.textContent = 'Keine Aufgabenliste gefunden.'; return; }
+    gTaskListId = list.id;
+    localStorage.setItem('g_list_id', gTaskListId);
+    useGoogle = true;
+    status.textContent = '„' + list.title + '" verbunden';
+    status.style.color = '#6db87a';
+    document.getElementById('gtask-connect-area').style.display = 'none';
+    await syncGoogleTasks();
+  } catch(e) {
+    status.textContent = 'Fehler beim Laden: ' + e.message;
+    status.style.color = '#c95f5f';
+  }
+}
+
+async function syncGoogleTasks() {
+  if (!gToken || !gTaskListId) return;
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/tasks/v1/lists/${gTaskListId}/tasks?showCompleted=true&showHidden=true`,
+      { headers: {'Authorization': 'Bearer ' + gToken} }
+    );
+    const data = await r.json();
+    if (data.error) return;
+    tasks = (data.items || []).map(t => ({
+      id: t.id, text: t.title, done: t.status === 'completed', google: true
+    }));
+    saveTasks(); renderTasks();
+  } catch(_) {}
+}
+
+async function addGoogleTask(text) {
+  if (!gToken || !gTaskListId) return false;
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/tasks/v1/lists/${gTaskListId}/tasks`,
+      { method:'POST', headers:{'Authorization':'Bearer '+gToken,'Content-Type':'application/json'},
+        body: JSON.stringify({title: text, status: 'needsAction'}) }
+    );
+    const t = await r.json();
+    if (t.id) { await syncGoogleTasks(); return true; }
+  } catch(_) {}
+  return false;
+}
+
+async function toggleGoogleTask(task) {
+  if (!gToken || !gTaskListId || !task.id) return false;
+  try {
+    await fetch(
+      `https://www.googleapis.com/tasks/v1/lists/${gTaskListId}/tasks/${task.id}`,
+      { method:'PATCH', headers:{'Authorization':'Bearer '+gToken,'Content-Type':'application/json'},
+        body: JSON.stringify({status: task.done ? 'needsAction' : 'completed'}) }
+    );
+    await syncGoogleTasks(); return true;
+  } catch(_) {}
+  return false;
+}
+
+async function deleteGoogleTask(task) {
+  if (!gToken || !gTaskListId || !task.id) return false;
+  try {
+    await fetch(
+      `https://www.googleapis.com/tasks/v1/lists/${gTaskListId}/tasks/${task.id}`,
+      { method:'DELETE', headers:{'Authorization':'Bearer '+gToken} }
+    );
+    await syncGoogleTasks(); return true;
+  } catch(_) {}
+  return false;
+}
+
+/* ── Lokale Aufgaben ── */
+let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
+
+function renderTasks() {
+  const ul = document.getElementById('task-list');
+  ul.innerHTML = '';
+  if (!tasks.length) {
+    ul.innerHTML = '<li class="tasks-empty">Keine Aufgaben</li>';
+    return;
+  }
+  tasks.forEach((t, i) => {
+    const li = document.createElement('li'); li.className = 'task-item';
+    const cb = document.createElement('button'); cb.className = 'task-cb' + (t.done ? ' done' : '');
+    cb.onclick = async () => {
+      if (useGoogle && t.google) { await toggleGoogleTask(t); return; }
+      tasks[i].done = !tasks[i].done; saveTasks(); renderTasks();
+    };
+    const span = document.createElement('span'); span.className = 'task-text' + (t.done ? ' done' : '');
+    span.textContent = t.text;
+    const del = document.createElement('button'); del.className = 'task-del'; del.textContent = '×';
+    del.onclick = async () => {
+      if (useGoogle && t.google) { await deleteGoogleTask(t); return; }
+      tasks.splice(i, 1); saveTasks(); renderTasks();
+    };
+    li.appendChild(cb); li.appendChild(span); li.appendChild(del);
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById('task-input').addEventListener('keydown', async e => {
+  if (e.key === 'Enter') {
+    const v = e.target.value.trim();
+    if (!v) return;
+    e.target.value = '';
+    if (useGoogle) { await addGoogleTask(v); return; }
+    tasks.unshift({text: v, done: false}); saveTasks(); renderTasks();
+  }
+});
+
+renderTasks();
+
+/* ── Stundenplan (iCal) ── */
+const WEEK_DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const WEEK_FULL = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+let icalEvents = [];
+let ttDay = new Date().getDay(); // default today
+
+function saveIcalUrl() {
+  const url = document.getElementById('ical-url-input').value.trim();
+  if (!url) return;
+  localStorage.setItem('ical_url', url);
+  loadIcal(url);
+}
+
+async function fetchWithProxy(targetUrl) {
+  const proxies = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const resp = await fetch(proxy(targetUrl), {signal: AbortSignal.timeout(8000)});
+      if (resp.ok) return resp;
+    } catch(_) {}
+  }
+  throw new Error('Alle Proxies fehlgeschlagen');
+}
+
+async function loadIcal(url) {
+  if (!url) return;
+  const col1 = document.getElementById('tt-col-1');
+  if (col1) col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Lade Stundenplan …</div>';
+  try {
+    const resp = await fetchWithProxy(url);
+    const text = await resp.text();
+    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Kein iCal');
+    icalEvents = parseIcal(text);
+    document.getElementById('ical-setup').style.display = 'none';
+    renderTimetableTabs();
+    renderTimetable();
+  } catch(e) {
+    if (col1) col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Konnte Stundenplan nicht laden — bitte Seite neu laden.</div>';
+  }
+}
+
+function parseIcal(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT');
+  blocks.shift();
+  for (const block of blocks) {
+    const get = (key) => {
+      const m = block.match(new RegExp(key + '[^:]*:([^\\r\\n]+)'));
+      return m ? m[1].trim() : '';
+    };
+    const dtstart = get('DTSTART');
+    const dtend   = get('DTEND');
+    const summary = get('SUMMARY').replace(/\\,/g,',').replace(/\\n/g,' ');
+    const location = get('LOCATION').replace(/\\,/g,',');
+    const rrule   = get('RRULE');
+    if (!dtstart || !summary) continue;
+
+    const parseDate = (s) => {
+      if (s.length === 8) return new Date(s.slice(0,4),s.slice(4,6)-1,s.slice(6,8));
+      // 20240415T103000Z or 20240415T103000
+      const y=s.slice(0,4),mo=s.slice(4,6)-1,d=s.slice(6,8);
+      const h=s.slice(9,11)||'0',mi=s.slice(11,13)||'0';
+      return s.endsWith('Z') ? new Date(Date.UTC(y,mo,d,h,mi)) : new Date(y,mo,d,h,mi);
+    };
+
+    const start = parseDate(dtstart);
+    const end   = parseDate(dtend || dtstart);
+    const dayOfWeek = start.getDay();
+    const timeStr = start.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) +
+                    ' – ' + end.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+    // Check if recurring weekly
+    const isWeekly = rrule.includes('WEEKLY') || rrule.includes('FREQ=WEEKLY');
+
+    events.push({ summary, location, start, end, timeStr, dayOfWeek, isWeekly });
+  }
+  return events;
+}
+
+const GRID_START = 8;
+const GRID_END   = 22;
+const GRID_HOURS = GRID_END - GRID_START;
+const CELL_H     = 52; // px per hour
+const DAYS_SHOWN = [1,2,3,4,5];
+const DAY_LABELS = ['Mo','Di','Mi','Do','Fr'];
+
+function renderTimetableTabs() {}
+
+function renderTimetable() {
+  const savedUrl = localStorage.getItem('ical_url');
+  if (savedUrl && !icalEvents.length) { loadIcal(savedUrl); return; }
+
+  const todayIdx = new Date().getDay();
+
+  // Highlight today header
+  DAYS_SHOWN.forEach((d, i) => {
+    const hd = document.getElementById('tt-hd-' + (i+1));
+    if (hd) hd.className = 'tt-header-day' + (d === todayIdx ? ' today' : '');
+  });
+
+  // Build time axis — exactly 14 slots (08–21), plus 22:00 label at bottom
+  const axis = document.getElementById('tt-time-axis');
+  axis.innerHTML = '';
+  for (let hr = GRID_START; hr < GRID_END; hr++) {
+    const slot = document.createElement('div');
+    slot.className = 'tt-time-slot';
+    slot.style.height = CELL_H + 'px';
+    const lbl = document.createElement('span');
+    lbl.textContent = String(hr).padStart(2,'0') + ':00';
+    slot.appendChild(lbl);
+    axis.appendChild(slot);
+  }
+  // 22:00 end label (zero height)
+  const endSlot = document.createElement('div');
+  endSlot.className = 'tt-time-slot';
+  endSlot.style.height = '0';
+  endSlot.style.overflow = 'visible';
+  const endLbl = document.createElement('span');
+  endLbl.textContent = '22:00';
+  endSlot.appendChild(endLbl);
+  axis.appendChild(endSlot);
+
+  // Build each day column — show ALL events for that weekday (deduplicated by title+startTime)
+  DAYS_SHOWN.forEach((dayIdx, colNum) => {
+    const col = document.getElementById('tt-col-' + (colNum+1));
+    col.innerHTML = '';
+
+    // Hour lines
+    for (let hr = GRID_START; hr < GRID_END; hr++) {
+      const line = document.createElement('div');
+      line.className = 'tt-hour-line';
+      line.style.height = CELL_H + 'px';
+      col.appendChild(line);
+    }
+
+    // Get Monday and Sunday of current week
+    const now = new Date();
+    const dow = now.getDay(); // 0=Sun
+    const monday = new Date(now); monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1)); monday.setHours(0,0,0,0);
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23,59,59,999);
+
+    const seen = new Set();
+    const dayEvents = icalEvents
+      .filter(e => {
+        if (e.dayOfWeek !== dayIdx) return false;
+        // Must fall within this week
+        return e.start >= monday && e.start <= sunday;
+      })
+      .filter(e => {
+        const key = e.summary + '|' + e.start.getHours() + ':' + e.start.getMinutes();
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      })
+      .sort((a,b) => a.start.getHours()*60+a.start.getMinutes() - (b.start.getHours()*60+b.start.getMinutes()));
+
+    dayEvents.forEach(ev => {
+      const startH = ev.start.getHours() + ev.start.getMinutes() / 60;
+      const endH   = ev.end.getHours()   + ev.end.getMinutes()   / 60;
+      if (endH <= GRID_START || startH >= GRID_END) return;
+
+      const clampStart = Math.max(startH, GRID_START);
+      const clampEnd   = Math.min(endH,   GRID_END);
+      const topPx    = (clampStart - GRID_START) * CELL_H;
+      const heightPx = Math.max((clampEnd - clampStart) * CELL_H - 2, 18);
+
+      const block = document.createElement('div');
+      block.className = 'tt-event-block';
+      block.style.top    = topPx + 'px';
+      block.style.height = heightPx + 'px';
+      block.innerHTML = `
+        <div class="tt-ev-title">${ev.summary}</div>
+        <div class="tt-ev-time">${ev.timeStr}</div>
+        ${ev.location ? `<div class="tt-ev-room">📍 ${ev.location}</div>` : ''}
+      `;
+      col.appendChild(block);
+    });
+  });
+}
+
+// Init: iCal URL ist bereits eingetragen
+(function() {
+  const ICAL_URL = 'https://studip.tu-braunschweig.de/dispatch.php/ical/index/fq8GH7jW';
+  localStorage.setItem('ical_url', ICAL_URL);
+  document.getElementById('ical-url-input').value = ICAL_URL;
+  document.getElementById('ical-setup').style.display = 'none';
+  loadIcal(ICAL_URL);
+})();
+/* ── Hell/Dunkel ── */
+(function() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  if (saved === 'light') document.documentElement.setAttribute('data-theme','light');
+  const btn = document.getElementById('theme-btn');
+  btn.textContent = saved === 'light' ? '🌙' : '☀️';
+  btn.onclick = () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+    localStorage.setItem('theme', isLight ? 'dark' : 'light');
+    btn.textContent = isLight ? '☀️' : '🌙';
+  };
+})();
+
+/* ── Mensa (OpenMensa API, TU Braunschweig Mensa 1 = ID 9) ── */
+/* ── Mensa (STW-ON API, Mensa 1 TU BS = ID 101) ── */
+const MENSA_LOCATION_ID = 101;
+const MENSA_DAYS_CACHE = {};
+const DAY_NAMES_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MONTH_NAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const DAY_NAMES_FULL = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+let mensaSelectedDate = null;
+
+function getMensaWeekDates() {
+  const today = new Date();
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  const dates = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function toISODate(d) { return d.toISOString().slice(0,10); }
+
+async function loadMensa() {
+  if (!mensaSelectedDate) mensaSelectedDate = toISODate(new Date());
+  buildMensaNav();
+  await loadMensaDay(mensaSelectedDate);
+}
+
+function buildMensaNav() {
+  const nav = document.getElementById('mensa-nav');
+  nav.innerHTML = '';
+  const dates = getMensaWeekDates();
+  const todayStr = toISODate(new Date());
+  dates.forEach(d => {
+    const ds = toISODate(d);
+    const btn = document.createElement('button');
+    btn.className = 'mensa-nav-btn' + (ds === mensaSelectedDate ? ' active' : '');
+    btn.textContent = DAY_NAMES_SHORT[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.';
+    if (ds === todayStr) btn.textContent += ' (heute)';
+    btn.onclick = async () => { mensaSelectedDate = ds; buildMensaNav(); await loadMensaDay(ds); };
+    nav.appendChild(btn);
+  });
+}
+
+async function fetchMensaData(targetUrl) {
+  const proxyUrls = [
+    targetUrl, // direct
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+  ];
+  for (const url of proxyUrls) {
+    try {
+      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!resp.ok) continue;
+      const text = await resp.text();
+      if (!text || text.length < 5) continue;
+      try { return JSON.parse(text); } catch(_) { continue; }
+    } catch(_) {}
+  }
+  return null;
+}
+
+async function loadMensaDay(dateStr) {
+  const grid = document.getElementById('mensa-grid');
+  const lbl  = document.getElementById('mensa-day-label');
+  const d = new Date(dateStr + 'T12:00:00');
+  lbl.textContent = DAY_NAMES_FULL[d.getDay()] + ', ' + d.getDate() + '. ' + MONTH_NAMES[d.getMonth()];
+
+  if (MENSA_DAYS_CACHE[dateStr]) { renderMensa(MENSA_DAYS_CACHE[dateStr]); return; }
+  grid.innerHTML = '<div class="mensa-empty">Lade Speiseplan …</div>';
+
+  // Try multiple location IDs in parallel: 101 = Mensa BS TU 1, 102 = Tageslager
+  const ids = [101, 102];
+  const results = await Promise.all(
+    ids.map(id => fetchMensaData(`https://sls.api.stw-on.de/v1/locations/${id}/menu/${dateStr}?time=all`))
+  );
+
+  // Merge meals from all locations
+  const merged = { meals: [], announcements: [] };
+  let gotAny = false;
+  for (const r of results) {
+    if (!r) continue;
+    gotAny = true;
+    if (r.meals) merged.meals = merged.meals.concat(r.meals);
+    if (r.announcements) merged.announcements = merged.announcements.concat(r.announcements);
+  }
+
+  if (!gotAny) {
+    grid.innerHTML = `<div class="mensa-empty">Verbindung zur STW-ON API fehlgeschlagen.<br><a href="https://stw-on.de/braunschweig/essen/mensen-cafeterien/mensa-1" target="_blank" style="color:var(--accent);font-size:.8rem;">Speiseplan auf stw-on.de öffnen ↗</a></div>`;
+    return;
+  }
+
+  MENSA_DAYS_CACHE[dateStr] = merged;
+  renderMensa(merged);
+}
+
+function makeMensaCard(m) {
+  const card = document.createElement('div'); card.className = 'mensa-card';
+  const p = m.price || {};
+  let priceStr = '';
+  if (p.student)  priceStr = `Stud. ${parseFloat(p.student).toFixed(2).replace('.',',')} €`;
+  if (p.employee) priceStr += (priceStr ? '  ·  ' : '') + `MA ${parseFloat(p.employee).toFixed(2).replace('.',',')} €`;
+  const cats = (m.tags?.categories||[]).map(t=>t.name).join(' · ');
+  const lane = m.lane?.name || '';
+  card.innerHTML = `
+    <div class="mensa-category">${lane}</div>
+    <div class="mensa-name">${m.name}</div>
+    ${cats ? `<div class="mensa-notes">${cats}</div>` : ''}
+    ${priceStr ? `<div class="mensa-price">${priceStr}</div>` : ''}
+  `;
+  return card;
+}
+
+function renderMensa(data) {
+  const grid = document.getElementById('mensa-grid');
+  grid.innerHTML = '';
+
+  const closed = data.announcements?.filter(a => a.closed) || [];
+  if (closed.length) {
+    grid.innerHTML = `<div class="mensa-empty">🚫 ${closed[0].text}</div>`;
+    return;
+  }
+
+  const meals = data.meals || [];
+  if (!meals.length) {
+    const announcements = data.announcements || [];
+    let info = '';
+    if (announcements.length) {
+      info = '<br><span style="font-size:.75rem;">' + announcements.map(a => a.text).filter(Boolean).join(' · ') + '</span>';
+    }
+    grid.innerHTML = `<div class="mensa-empty">Für diesen Tag liegen keine Daten vor.${info}<br><br><a href="https://stw-on.de/braunschweig/essen/mensen-cafeterien/mensa-1" target="_blank" style="color:var(--accent);font-size:.8rem;">Speiseplan auf stw-on.de öffnen ↗</a></div>`;
+    return;
+  }
+
+  const noon    = meals.filter(m => m.time === 'noon');
+  const evening = meals.filter(m => m.time === 'evening');
+
+  if (noon.length) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'grid-column:1/-1;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:300;margin-top:.3rem;margin-bottom:.2rem;';
+    hdr.textContent = '☀️  Mittagsmensa · 11:20 – 14:15 Uhr';
+    grid.appendChild(hdr);
+    noon.forEach(m => grid.appendChild(makeMensaCard(m)));
+  }
+  if (evening.length) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'grid-column:1/-1;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:300;margin-top:1.2rem;margin-bottom:.2rem;';
+    hdr.textContent = '🌙  Abendmensa · 16:00 – 19:30 Uhr';
+    grid.appendChild(hdr);
+    evening.forEach(m => grid.appendChild(makeMensaCard(m)));
+  }
+}
+
+window.addEventListener('load', () => document.getElementById('search').focus());
+document.addEventListener('keydown', e => { if (e.target === document.body && e.key.length === 1 && !e.ctrlKey && !e.metaKey) document.getElementById('search').focus(); });
+</script>
+</body>
+</html>
