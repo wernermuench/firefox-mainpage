@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Startseite</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+<!-- Speed: TCP/TLS-Handshake schon mal anstoßen, bevor JS loslegt -->
+<link rel="preconnect" href="https://sls.api.stw-on.de" crossorigin>
+<link rel="preconnect" href="https://studip.tu-braunschweig.de" crossorigin>
+<link rel="preconnect" href="https://api.allorigins.win" crossorigin>
+<link rel="preconnect" href="https://corsproxy.io" crossorigin>
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.google.com">
+<link rel="dns-prefetch" href="https://api.codetabs.com">
 <script src="https://accounts.google.com/gsi/client" async></script>
 <style>
   :root {
@@ -13,7 +22,7 @@
     --surface: #16161c;
     --border:  rgba(255,255,255,0.07);
     --text:    #eceae4;
-    --muted:   rgba(236,234,228,0.38);
+    --muted:   rgba(236,234,228,0.58);
     --accent:  #6b8cba;
     --hover:   rgba(255,255,255,0.05);
     --r:       12px;
@@ -25,7 +34,7 @@
     --surface: #ffffff;
     --border:  rgba(0,0,0,0.08);
     --text:    #1a1a20;
-    --muted:   rgba(26,26,32,0.45);
+    --muted:   rgba(26,26,32,0.60);
     --accent:  #4a72a8;
     --hover:   rgba(0,0,0,0.04);
   }
@@ -68,7 +77,30 @@
   body::before {
     content:'';
     position:fixed; inset:0;
-    background: radial-gradient(ellipse 70% 45% at 15% 5%, rgba(107,140,186,0.06) 0%, transparent 55%);
+    /* Aurora-Glow: drei überlappende Bögen (Blau, Lavendel, Petrol) mit Mittelpunkt
+       oberhalb des Viewports — wirkt wie sanftes Polarlicht am oberen Bildrand.
+       Mehrstufige Alpha-Stops sorgen für sehr weichen Abfall ohne sichtbare Ringe.
+       Zusätzlicher Blur glättet Color-Banding auf empfindlichen Displays. */
+    background:
+      radial-gradient(ellipse 60% 45% at 35% -18%,
+        rgba(107,140,186,0.18) 0%,
+        rgba(107,140,186,0.10) 25%,
+        rgba(107,140,186,0.04) 50%,
+        rgba(107,140,186,0.01) 70%,
+        transparent 85%),
+      radial-gradient(ellipse 55% 38% at 50% -14%,
+        rgba(150,130,200,0.13) 0%,
+        rgba(150,130,200,0.07) 25%,
+        rgba(150,130,200,0.03) 50%,
+        rgba(150,130,200,0.01) 70%,
+        transparent 85%),
+      radial-gradient(ellipse 60% 45% at 65% -16%,
+        rgba(120,170,180,0.10) 0%,
+        rgba(120,170,180,0.06) 25%,
+        rgba(120,170,180,0.02) 50%,
+        rgba(120,170,180,0.01) 70%,
+        transparent 85%);
+    filter: blur(30px);
     pointer-events:none; z-index:0;
   }
 
@@ -92,7 +124,7 @@
   #greeting, #date-str {
     font-size: 0.9rem;
     color: var(--muted);
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -109,11 +141,11 @@
     line-height: 1;
   }
 
-  #w-desc { font-size: 1.05rem; color: var(--muted); font-weight: 300; margin-top:0.4rem; }
-  #w-city { font-size: 0.85rem; color: var(--muted); font-weight: 300; opacity:.65; margin-top:0.2rem; text-transform:uppercase; letter-spacing:0.07em; }
-  #w-hi-lo { font-size: 0.92rem; color: var(--muted); font-weight: 300; margin-top:0.2rem; opacity:.6; }
-  #w-uv { font-size: 0.92rem; font-weight: 300; margin-top:0.15rem; }
-  #w-rain-prob { font-size: 0.92rem; color: var(--muted); font-weight: 300; margin-top:0.15rem; opacity:.7; }
+  #w-desc { font-size: 1.05rem; color: var(--muted); font-weight: 400; margin-top:0.4rem; }
+  #w-city { font-size: 0.85rem; color: var(--muted); font-weight: 400; opacity:.65; margin-top:0.2rem; text-transform:uppercase; letter-spacing:0.07em; }
+  #w-hi-lo { font-size: 0.92rem; color: var(--muted); font-weight: 400; margin-top:0.2rem; opacity:.6; }
+  #w-uv { font-size: 0.92rem; font-weight: 400; margin-top:0.15rem; }
+  #w-rain-prob { font-size: 0.92rem; color: var(--muted); font-weight: 400; margin-top:0.15rem; opacity:.7; }
 
   /* ── Suche ── */
   .search-wrap {
@@ -133,7 +165,7 @@
   #search {
     background:none; border:none; outline:none;
     color:var(--text); font-family:var(--font);
-    font-size:1.05rem; font-weight:300;
+    font-size:1.05rem; font-weight:400;
     width:100%; padding:0.95rem 0;
   }
   #search::placeholder { color:var(--muted); }
@@ -141,8 +173,8 @@
   .eng-wrap { display:flex; gap:4px; flex-shrink:0; }
   .eng-btn {
     background:none; border:0.5px solid transparent; border-radius:6px;
-    color:var(--muted); font-family:var(--font); font-size:0.67rem;
-    font-weight:300; cursor:pointer; padding:3px 7px;
+    color:var(--text); font-family:var(--font); font-size:0.72rem;
+    font-weight:400; cursor:pointer; padding:3px 7px;
     letter-spacing:0.05em; transition:all 0.15s;
   }
   .eng-btn.active { border-color:var(--accent); color:var(--accent); }
@@ -152,9 +184,9 @@
   .cat-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:1rem; }
   .cat-btn {
     background:none; border:0.5px solid var(--border); border-radius:20px;
-    color:var(--muted); font-family:var(--font); font-size:0.8rem;
-    font-weight:300; cursor:pointer; padding:5px 16px;
-    transition:all 0.15s; letter-spacing:0.05em;
+    color:var(--muted); font-family:var(--font); font-size:0.82rem;
+    font-weight:500; cursor:pointer; padding:5px 16px;
+    transition:all 0.15s; letter-spacing:0.04em;
   }
   .cat-btn.active { border-color:var(--accent); color:var(--accent); }
   .cat-btn:hover:not(.active) { color:var(--text); border-color:rgba(255,255,255,0.18); }
@@ -189,9 +221,9 @@
   }
 
   .bm-name {
-    font-size:0.78rem; color:var(--muted); text-align:center;
+    font-size:0.78rem; color:var(--text); text-align:center;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    max-width:105px; font-weight:300;
+    max-width:105px; font-weight:400;
   }
   .bm-card:hover .bm-name { color:var(--text); }
 
@@ -214,11 +246,12 @@
   }
 
   .wx-card-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 300;
+    color: var(--text);
+    opacity: 0.85;
+    font-weight: 500;
     margin-bottom: 1rem;
   }
 
@@ -438,7 +471,7 @@
   .task-cb.done::after { content:''; display:block; width:5px; height:9px; border:2px solid var(--bg); border-top:none; border-left:none; transform:rotate(45deg) translate(-1px,-1px); }
 
   .task-text {
-    flex:1; font-size:0.92rem; font-weight:300;
+    flex:1; font-size:0.92rem; font-weight:400;
     color:var(--text); cursor:default;
     transition:color 0.15s;
   }
@@ -464,8 +497,8 @@
   .mensa-nav { display:flex; gap:6px; margin-bottom:0.8rem; flex-wrap:wrap; }
   .mensa-nav-btn {
     background:none; border:0.5px solid var(--border); border-radius:20px;
-    color:var(--muted); font-family:var(--font); font-size:0.72rem; font-weight:300;
-    cursor:pointer; padding:4px 14px; transition:all .15s; letter-spacing:0.04em;
+    color:var(--muted); font-family:var(--font); font-size:0.78rem; font-weight:500;
+    cursor:pointer; padding:4px 14px; transition:all .15s; letter-spacing:0.03em;
   }
   .mensa-nav-btn.active { border-color:var(--accent); color:var(--accent); }
   .mensa-nav-btn:hover:not(.active) { color:var(--text); border-color:rgba(255,255,255,0.18); }
@@ -477,51 +510,103 @@
   .mensa-price { font-size:0.75rem; color:var(--muted); font-weight:300; margin-top:0.4rem; }
   .mensa-notes { font-size:0.7rem; color:var(--muted); font-weight:300; margin-top:0.2rem; opacity:.7; }
   .mensa-empty { font-size:0.85rem; color:var(--muted); font-weight:300; padding:1rem 0; }
+
+  /* ── Suchvorschläge ── */
+  .search-outer { position: relative; width: 100%; }
+  .suggestions {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+    z-index: 200; display: none;
+  }
+  .suggestions.open { display: block; }
+  .sg-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem; font-weight: 400; color: var(--text);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .sg-item:hover, .sg-item.focused { background: var(--hover); }
+  .sg-item svg { flex-shrink: 0; opacity: 0.35; }
 </style>
 </head>
 <body>
 
 <script>
 /* ══ LESEZEICHEN — hier anpassen ══ */
+// icon: optionale eigene Icon-URL (sonst wird Favicon automatisch geladen)
 const BOOKMARKS = [
-	{ url:'https://studip.tu-braunschweig.de',       	name:'Stud.IP',        	cat:'Uni' }, 
-	{ url:'https://connect.tu-braunschweig.de',       	name:'TUconnect',       cat:'Uni' },
-	{ url:'https://mail.tu-braunschweig.de/', 		name:'Outlook', 	cat:'Uni' },
-	{ url:'https://katalog.ub.tu-braunschweig.de/vufind/',  name:'Bibliothek',     	cat:'Uni' },
-	{ url:'https://www.tu-braunschweig.de',          	name:'TU BS',          	cat:'Uni' },
+  { url:'https://studip.tu-braunschweig.de',      name:'Stud.IP',          cat:'Uni',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiNmZmZmZmYiLz48cGF0aCBkPSJNOCA1MCBBMjQgMjQgMCAwIDEgNTYgNTAiIHN0cm9rZT0iI0U3NEMzQyIgc3Ryb2tlLXdpZHRoPSI2IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTYgNTAgQTE2IDE2IDAgMCAxIDQ4IDUwIiBzdHJva2U9IiMyN0FFNjAiIHN0cm9rZS13aWR0aD0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTI0IDUwIEE4IDggMCAwIDEgNDAgNTAiIHN0cm9rZT0iIzM0OThEQiIgc3Ryb2tlLXdpZHRoPSI2IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=' },
+  { url:'https://connect.tu-braunschweig.de',     name:'TUconnect',        cat:'Uni',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiNCRTE0MTQiLz48dGV4dCB4PSIzMiIgeT0iNDIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiI+VFU8L3RleHQ+PC9zdmc+' },
+  { url:'https://mail.tu-braunschweig.de/',        name:'Outlook',          cat:'Uni',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMwMDc4RDQiLz48ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjE0IiByeT0iMTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI1Ii8+PHBhdGggZD0iTTIyIDM4IGwxMCAtNyBsMTAgNyIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==' },
+  { url:'https://katalog.ub.tu-braunschweig.de/vufind/', name:'Bibliothek', cat:'Uni',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMxRjNBNUYiLz48cGF0aCBkPSJNMTAgMTggTDMwIDIyIEwzMCA1MCBMMTAgNDYgWiIgZmlsbD0iI0U4QzQ2OCIvPjxwYXRoIGQ9Ik01NCAxOCBMMzQgMjIgTDM0IDUwIEw1NCA0NiBaIiBmaWxsPSIjRThDNDY4Ii8+PHBhdGggZD0iTTMwIDIyIEwzMiAyMyBMMzQgMjIgTDM0IDUwIEwzMiA1MSBMMzAgNTAgWiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40Ii8+PC9zdmc+' },
+  { url:'https://www.tu-braunschweig.de',          name:'TU BS',            cat:'Uni',
+    icon:'https://www.tu-braunschweig.de/favicon.ico' },
 
-	{ url:'https://github.com',                      	name:'GitHub',         	cat:'Informatik' },
-	{ url:'https://gitlab.com',                      	name:'GitLab',         	cat:'Informatik' },
-	{ url:'https://stackoverflow.com',              	name:'Stack Overflow', 	cat:'Informatik' },
+  { url:'https://github.com',                      name:'GitHub',           cat:'Informatik',
+    icon:'https://github.githubassets.com/favicons/favicon.png' },
+  { url:'https://gitlab.com',                      name:'GitLab',           cat:'Informatik',
+    icon:'https://gitlab.com/assets/favicon-72a2cad5025aa931d6ea56c3201d1f18e68a8cd39788c7c80d5b2b82aa5143ef.png' },
+  { url:'https://stackoverflow.com',               name:'Stack Overflow',   cat:'Informatik',
+    icon:'https://cdn.sstatic.net/Sites/stackoverflow/Img/apple-touch-icon.png' },
 
-	{ url:'https://gemini.google.com',               	name:'Gemini',         	cat:'KI' },
-	{ url:'https://chatgpt.com',                     	name:'ChatGPT',       	cat:'KI' },
-	{ url:'https://claude.ai',                       	name:'Claude',         	cat:'KI' },
-	{ url:'https://www.deepl.com/de/translator',            name:'DeepL',     	cat:'KI' },
+  { url:'https://gemini.google.com',               name:'Gemini',           cat:'KI',
+    icon:'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg' },
+  { url:'https://chatgpt.com',                     name:'ChatGPT',          cat:'KI',
+    icon:'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg' },
+  { url:'https://claude.ai',                       name:'Claude',           cat:'KI',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNGQUY5RjUiLz48cGF0aCBkPSJNMzIgMTAgQzMyIDIyIDMyIDI2IDM4IDMwIEM0NCAzNCA1MCAzMiA1NCAzMiBDNTAgMzIgNDQgMzAgMzggMzQgQzMyIDM4IDMyIDQyIDMyIDU0IEMzMiA0MiAzMiAzOCAyNiAzNCBDMjAgMzAgMTQgMzIgMTAgMzIgQzE0IDMyIDIwIDM0IDI2IDMwIEMzMiAyNiAzMiAyMiAzMiAxMCBaIiBmaWxsPSIjRDk3NzU3Ii8+PC9zdmc+' },
+  { url:'https://www.deepl.com/de/translator',     name:'DeepL',            cat:'KI',
+    icon:'https://static.deepl.com/img/favicon/favicon_96.png' },
 
-	{ url:'https://youtube.com',                     	name:'YouTube',        	cat:'Streaming' },
-	{ url:'https://primevideo.com',                  	name:'Prime Video',    	cat:'Streaming' },
-	{ url:'https://netflix.com',                     	name:'Netflix',        	cat:'Streaming' },
-	{ url:'https://disneyplus.com',                  	name:'Disney+',        	cat:'Streaming' },
-	{ url:'https://open.spotify.com',                	name:'Spotify',        	cat:'Streaming' },
-	{ url:'https://twitch.tv',                       	name:'Twitch',         	cat:'Streaming' },
-	
-	{ url:'https://mail.google.com/mail',                   name:'Gmail',         	cat:'Google' },
-	{ url:'https://www.google.com/maps',                    name:'Maps',         	cat:'Google' },
-	{ url:'https://photos.google.com',                      name:'Fotos',         	cat:'Google' },
-	{ url:'https://calendar.google.com/calendar/u/0/r',           name:'Kalender',        cat:'Google' },
-	{ url:'https://docs.google.com/document/',              name:'Google Docs',     cat:'Google' },
-	{ url:'https://docs.google.com/spreadsheets',           name:'Google Tabellen', cat:'Google' },
-	{ url:'https://keep.google.com/',                   	name:'Google Notizen',  cat:'Google' },
-	{ url:'https://tasks.google.com/tasks/',                name:'Tasks',         	cat:'Google' },
-	
-	{ url:'https://web.whatsapp.com',                	name:'WhatsApp',       	cat:'Social' },
-	{ url:'https://instagram.com',                   	name:'Instagram',      	cat:'Social' },
-	{ url:'https://reddit.com',                      	name:'Reddit',         	cat:'Social' },
-	{ url:'https://linkedin.com',                    	name:'LinkedIn',       	cat:'Social' },
-	
-	{ url:'https://access.ing.de/delogin/w/login',          name:'ING',       	cat:'Finanzielles' },
-	{ url:'https://www.paypal.com/signin',                  name:'PayPal',       	cat:'Finanzielles' },
+  { url:'https://youtube.com',                     name:'YouTube',          cat:'Streaming',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA0OCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiNGRjAwMDAiLz48cGF0aCBkPSJNMjYgMTQgTDI2IDM0IEw0NCAyNCBaIiBmaWxsPSIjZmZmZmZmIi8+PC9zdmc+' },
+  { url:'https://primevideo.com',                  name:'Prime Video',      cat:'Streaming',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMwMEE4RTEiLz48dGV4dCB4PSIzMiIgeT0iMzQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zdHlsZT0iaXRhbGljIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmZmZmIj5wcmltZTwvdGV4dD48cGF0aCBkPSJNMTYgNDIgUTMyIDUwIDQ4IDQyIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48dGV4dCB4PSIzMiIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2EsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjQwMCIgZm9udC1zaXplPSI5IiBmaWxsPSIjZmZmZmZmIj52aWRlbzwvdGV4dD48L3N2Zz4=' },
+  { url:'https://netflix.com',                     name:'Netflix',          cat:'Streaming',
+    icon:'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.ico' },
+  { url:'https://disneyplus.com',                  name:'Disney+',          cat:'Streaming',
+    icon:'https://www.disneyplus.com/favicon.ico' },
+  { url:'https://open.spotify.com',                name:'Spotify',          cat:'Streaming',
+    icon:'https://open.spotifycdn.com/cdn/images/favicon32.b64ecc03.png' },
+  { url:'https://twitch.tv',                       name:'Twitch',           cat:'Streaming',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiM5MTQ2RkYiLz48cGF0aCBkPSJNMTYgMTIgTDUyIDEyIEw1MiAzNiBMNDAgNDggTDMyIDQ4IEwyNiA1NCBMMjYgNDggTDE2IDQ4IFoiIGZpbGw9IiNmZmZmZmYiLz48cmVjdCB4PSIzNCIgeT0iMjIiIHdpZHRoPSIzIiBoZWlnaHQ9IjExIiBmaWxsPSIjOTE0NkZGIi8+PHJlY3QgeD0iNDQiIHk9IjIyIiB3aWR0aD0iMyIgaGVpZ2h0PSIxMSIgZmlsbD0iIzkxNDZGRiIvPjwvc3ZnPg==' },
+
+  { url:'https://mail.google.com/mail',            name:'Gmail',            cat:'Google',
+    icon:'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico' },
+  { url:'https://www.google.com/maps',             name:'Maps',             cat:'Google',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA2NCI+PHBhdGggZD0iTTI0IDQgQzEzIDQgNCAxMyA0IDI0IEM0IDM4IDI0IDYwIDI0IDYwIEMyNCA2MCA0NCAzOCA0NCAyNCBDNDQgMTMgMzUgNCAyNCA0IFoiIGZpbGw9IiNFQTQzMzUiLz48Y2lyY2xlIGN4PSIyNCIgY3k9IjIyIiByPSI3IiBmaWxsPSIjZmZmZmZmIi8+PC9zdmc+' },
+  { url:'https://photos.google.com',               name:'Fotos',            cat:'Google',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTMyIDQgQTE0IDE0IDAgMCAxIDQ2IDE4IEw0NiAzMiBMMzIgMzIgWiIgZmlsbD0iI0ZCQkMwNSIvPjxwYXRoIGQ9Ik02MCAzMiBBMTQgMTQgMCAwIDEgNDYgNDYgTDMyIDQ2IEwzMiAzMiBaIiBmaWxsPSIjMzRBODUzIi8+PHBhdGggZD0iTTMyIDYwIEExNCAxNCAwIDAgMSAxOCA0NiBMMTggMzIgTDMyIDMyIFoiIGZpbGw9IiM0Mjg1RjQiLz48cGF0aCBkPSJNNCAzMiBBMTQgMTQgMCAwIDEgMTggMTggTDMyIDE4IEwzMiAzMiBaIiBmaWxsPSIjRUE0MzM1Ii8+PC9zdmc+' },
+  { url:'https://calendar.google.com/calendar',    name:'Kalender',         cat:'Google',
+    icon:'https://calendar.google.com/googlecalendar/images/favicons_2020q4/calendar_1.ico' },
+  { url:'https://docs.google.com/document/',       name:'Docs',             cat:'Google',
+    icon:'https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico' },
+  { url:'https://docs.google.com/spreadsheets',    name:'Tabellen',         cat:'Google',
+    icon:'https://ssl.gstatic.com/docs/spreadsheets/favicon3.ico' },
+  { url:'https://keep.google.com/',                name:'Keep',             cat:'Google',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI0UwRTBFMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBhdGggZD0iTTMyIDE0IEMyNSAxNCAxOSAxOSAxOSAyNyBDMTkgMzIgMjIgMzYgMjUgMzggTDI1IDQ0IEwzOSA0NCBMMzkgMzggQzQyIDM2IDQ1IDMyIDQ1IDI3IEM0NSAxOSAzOSAxNCAzMiAxNCBaIiBmaWxsPSIjRkJCQzA0Ii8+PHJlY3QgeD0iMjYiIHk9IjQ2IiB3aWR0aD0iMTIiIGhlaWdodD0iMyIgZmlsbD0iIzVGNjM2OCIvPjxyZWN0IHg9IjI4IiB5PSI1MSIgd2lkdGg9IjgiIGhlaWdodD0iMyIgZmlsbD0iIzVGNjM2OCIvPjwvc3ZnPg==' },
+  { url:'https://tasks.google.com/tasks/',         name:'Tasks',            cat:'Google',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMjgiIGZpbGw9IiMxQTczRTgiLz48cGF0aCBkPSJNMTggMzIgTDI4IDQyIEw0NiAyNCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==' },
+
+  { url:'https://web.whatsapp.com',                name:'WhatsApp',         cat:'Social',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTMyIDQgQzE3IDQgNCAxNyA0IDMyIEM0IDM3IDUgNDIgOCA0NiBMNCA2MCBMMTggNTYgQzIyIDU4IDI3IDYwIDMyIDYwIEM0NyA2MCA2MCA0NyA2MCAzMiBDNjAgMTcgNDcgNCAzMiA0IFoiIGZpbGw9IiMyNUQzNjYiLz48cGF0aCBkPSJNMjIgMjAgQzIzIDE4IDI1IDE4IDI2IDIwIEMyNyAyMiAyOCAyNCAyOSAyNiBDMjkgMjcgMjggMjggMjcgMjkgQzI2IDMwIDI2IDMxIDI3IDMyIEMyOSAzNiAzMyAzOSAzOCA0MSBDMzkgNDEgNDAgNDAgNDEgMzkgQzQyIDM4IDQzIDM4IDQ0IDM5IEM0NSA0MCA0NyA0MSA0OCA0MiBDNDkgNDMgNDkgNDUgNDcgNDYgQzQ1IDQ4IDQyIDQ4IDM5IDQ3IEMzMiA0NSAyNiAzOSAyMyAzMiBDMjIgMjkgMjEgMjUgMjIgMjAgWiIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPg==' },
+  { url:'https://instagram.com',                   name:'Instagram',        cat:'Social',
+    icon:'https://static.cdninstagram.com/rsrc.php/v3/yG/r/De-Dwpd5CHc.png' },
+  { url:'https://reddit.com',                      name:'Reddit',           cat:'Social',
+    icon:'https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-57x57.png' },
+  { url:'https://linkedin.com',                    name:'LinkedIn',         cat:'Social',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMwQTY2QzIiLz48Y2lyY2xlIGN4PSIxOSIgY3k9IjIwIiByPSI0LjUiIGZpbGw9IiNmZmZmZmYiLz48cmVjdCB4PSIxNC41IiB5PSIyNyIgd2lkdGg9IjkiIGhlaWdodD0iMjIiIGZpbGw9IiNmZmZmZmYiLz48cGF0aCBkPSJNMjggMjcgTDM3IDI3IEwzNyAzMCBDMzkgMjggNDIgMjYgNDYgMjYgQzUyIDI2IDU2IDMwIDU2IDM3IEw1NiA0OSBMNDcgNDkgTDQ3IDM4IEM0NyAzNSA0NSAzMyA0MiAzMyBDMzkgMzMgMzcgMzUgMzcgMzggTDM3IDQ5IEwyOCA0OSBaIiBmaWxsPSIjZmZmZmZmIi8+PC9zdmc+' },
+
+  { url:'https://access.ing.de/delogin/w/login',  name:'ING',              cat:'Finanzielles',
+    icon:'https://www.ing.de/favicon.ico' },
+  { url:'https://www.paypal.com/signin',           name:'PayPal',           cat:'Finanzielles',
+    icon:'https://www.paypalobjects.com/webstatic/icon/pp258.png' },
 ];
 
 const ENGINES = {
@@ -550,10 +635,13 @@ const ENGINES = {
     </div>
   </div>
 
+  <div class="search-outer">
   <div class="search-wrap">
     <svg class="s-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
     <input id="search" type="text" placeholder="Suchen …" autocomplete="off" spellcheck="false">
     <div class="eng-wrap" id="eng-wrap"></div>
+  </div>
+  <div class="suggestions" id="suggestions"></div>
   </div>
 
   <div>
@@ -712,13 +800,74 @@ Object.keys(ENGINES).forEach(k => {
   b.onclick = () => { ae = k; document.querySelectorAll('.eng-btn').forEach(x => x.classList.toggle('active', x.textContent === k)); };
   ew.appendChild(b);
 });
-document.getElementById('search').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { const q = e.target.value.trim(); if (q) location.href = ENGINES[ae] + encodeURIComponent(q); }
+/* ── Suchvorschläge ── */
+const searchEl = document.getElementById('search');
+const sugBox   = document.getElementById('suggestions');
+let sgItems = [], sgFocus = -1, sgTimer = null, sgReqId = 0;
+const SG_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>';
+
+function fetchSuggestions(q) {
+  document.querySelectorAll('._sgScript').forEach(s => s.remove());
+  return new Promise(resolve => {
+    if (ae === 'Google') {
+      const cbName = '_sgCb' + Date.now();
+      window[cbName] = d => { delete window[cbName]; resolve(Array.isArray(d[1]) ? d[1] : []); };
+      const s = document.createElement('script');
+      s.className = '_sgScript';
+      s.onerror = () => { delete window[cbName]; resolve([]); };
+      s.src = 'https://suggestqueries.google.com/complete/search?client=toolbar&q=' + encodeURIComponent(q) + '&callback=' + cbName;
+      document.head.appendChild(s);
+    } else {
+      fetch('https://duckduckgo.com/ac/?q=' + encodeURIComponent(q) + '&type=list', { signal: AbortSignal.timeout(2000) })
+        .then(r => r.json()).then(d => resolve(d[1] || [])).catch(() => resolve([]));
+    }
+  });
+}
+
+function closeSuggestions() { sugBox.classList.remove('open'); sgItems = []; sgFocus = -1; }
+
+function renderSuggestions(items) {
+  sgItems = items; sgFocus = -1; sugBox.innerHTML = '';
+  if (!items.length) { closeSuggestions(); return; }
+  items.forEach(text => {
+    const div = document.createElement('div'); div.className = 'sg-item';
+    div.innerHTML = SG_ICON + '<span>' + text + '</span>';
+    div.addEventListener('mousedown', e => { e.preventDefault(); searchEl.value = text; closeSuggestions(); location.href = ENGINES[ae] + encodeURIComponent(text); });
+    sugBox.appendChild(div);
+  });
+  sugBox.classList.add('open');
+}
+
+function updateSgFocus() {
+  sugBox.querySelectorAll('.sg-item').forEach((el, i) => el.classList.toggle('focused', i === sgFocus));
+  if (sgFocus >= 0) searchEl.value = sgItems[sgFocus];
+}
+
+searchEl.addEventListener('input', () => {
+  clearTimeout(sgTimer);
+  const q = searchEl.value.trim();
+  if (!q) { closeSuggestions(); return; }
+  const id = ++sgReqId;
+  sgTimer = setTimeout(async () => {
+    const items = await fetchSuggestions(q);
+    if (id !== sgReqId) return;
+    renderSuggestions(items.slice(0, 8));
+  }, 150);
 });
+
+searchEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = searchEl.value.trim(); if (q) { closeSuggestions(); location.href = ENGINES[ae] + encodeURIComponent(q); }
+  } else if (e.key === 'ArrowDown') { e.preventDefault(); sgFocus = Math.min(sgFocus+1, sgItems.length-1); updateSgFocus();
+  } else if (e.key === 'ArrowUp')   { e.preventDefault(); sgFocus = Math.max(sgFocus-1, -1); updateSgFocus();
+  } else if (e.key === 'Escape')    { closeSuggestions(); }
+});
+
+document.addEventListener('click', e => { if (!e.target.closest('.search-outer')) closeSuggestions(); });
 
 /* ── Kategorien ── */
 const bmCats = ['Alle', ...new Set(BOOKMARKS.map(b => b.cat))];
-const allCats = [...bmCats, 'Wetter', 'Mensa', 'To-Do'];
+const allCats = [...bmCats, 'Wetter', 'Mensa'];
 let ac = 'Alle';
 
 function renderCats() {
@@ -736,13 +885,11 @@ function renderCats() {
 function renderGrid() {
   const g  = document.getElementById('grid');
   const wp = document.getElementById('weather-panel');
-  const tp = document.getElementById('todo-panel');
   const up = document.getElementById('uni-panel');
   const mp = document.getElementById('mensa-panel');
-  g.style.display=''; wp.style.display='none'; tp.style.display='none'; up.style.display='none'; mp.style.display='none';
+  g.style.display=''; wp.style.display='none'; up.style.display='none'; mp.style.display='none';
 
   if (ac === 'Wetter') { g.style.display='none'; wp.style.display='block'; renderWeatherDetail(); return; }
-  if (ac === 'To-Do')  { g.style.display='none'; tp.style.display='block'; return; }
   if (ac === 'Mensa')  { g.style.display='none'; mp.style.display='block'; loadMensa(); return; }
   // Bookmarks grid
   g.innerHTML = '';
@@ -750,7 +897,32 @@ function renderGrid() {
     const a = document.createElement('a'); a.className = 'bm-card'; a.href = bm.url;
     let host = ''; try { host = new URL(bm.url).hostname; } catch(_) {}
     const img = document.createElement('img');
-    img.className = 'bm-icon'; img.src = `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+    img.className = 'bm-icon';
+    // Speed: Browser darf Icon spät laden + asynchron dekodieren = kein Blockieren des Renderings
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.fetchPriority = 'low';
+    // Inline data: URIs brauchen weder Netz noch Cache — direkt verwenden
+    const isInline = bm.icon && bm.icon.startsWith('data:');
+    if (isInline) {
+      img.src = bm.icon;
+    } else {
+      // Speed: Icon-Cache aus localStorage (base64) — beim 2. Aufruf instant, kein Netz nötig
+      const iconKey = 'icon_v1_' + (bm.icon || host);
+      const cachedIcon = (() => { try { return localStorage.getItem(iconKey); } catch(_) { return null; } })();
+      img.src = cachedIcon || bm.icon || `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
+      // Beim ersten erfolgreichen Laden in localStorage cachen (best effort, kann Quota-Limits hitten → still ignorieren)
+      if (!cachedIcon) {
+        img.addEventListener('load', () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            c.getContext('2d').drawImage(img, 0, 0, 64, 64);
+            localStorage.setItem(iconKey, c.toDataURL('image/png'));
+          } catch(_) { /* CORS / Quota → ignorieren */ }
+        }, { once: true });
+      }
+    }
     img.alt = bm.name; img.width = 40; img.height = 40;
     img.onerror = () => { const fb = document.createElement('div'); fb.className = 'bm-fallback'; fb.textContent = bm.name[0].toUpperCase(); a.replaceChild(fb, img); };
     const label = document.createElement('span'); label.className = 'bm-name'; label.textContent = bm.name;
@@ -1172,35 +1344,79 @@ function saveIcalUrl() {
   loadIcal(url);
 }
 
+// Speed: Direct + alle Proxies PARALLEL, der schnellste gewinnt (Promise.any).
+// Statt sequenziell mit 3×8s = bis zu 24s Wartezeit jetzt max. ~5s für die schnellste Quelle.
 async function fetchWithProxy(targetUrl) {
-  const proxies = [
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  const candidates = [
+    targetUrl, // direct first — falls CORS erlaubt, ist das am schnellsten
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];
-  for (const proxy of proxies) {
-    try {
-      const resp = await fetch(proxy(targetUrl), {signal: AbortSignal.timeout(8000)});
-      if (resp.ok) return resp;
-    } catch(_) {}
-  }
-  throw new Error('Alle Proxies fehlgeschlagen');
+  const attempts = candidates.map(url =>
+    fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => {
+      if (!r.ok) throw new Error('not ok');
+      return r;
+    })
+  );
+  return Promise.any(attempts); // erste erfolgreiche Antwort gewinnt
+}
+
+// Speed: localStorage-Cache mit Stale-While-Revalidate.
+// Beim Reload sofort die alte Version anzeigen, im Hintergrund auffrischen.
+const ICAL_CACHE_KEY = 'ical_cache_v1';
+const ICAL_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 Stunden
+
+function readIcalCache(url) {
+  try {
+    const raw = localStorage.getItem(ICAL_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj.url !== url) return null;
+    return obj; // { url, text, ts }
+  } catch(_) { return null; }
+}
+
+function writeIcalCache(url, text) {
+  try { localStorage.setItem(ICAL_CACHE_KEY, JSON.stringify({ url, text, ts: Date.now() })); } catch(_) {}
 }
 
 async function loadIcal(url) {
   if (!url) return;
   const col1 = document.getElementById('tt-col-1');
-  if (col1) col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Lade Stundenplan …</div>';
+
+  // 1. Cache-Hit: sofort rendern
+  const cached = readIcalCache(url);
+  const fresh = cached && (Date.now() - cached.ts) < ICAL_CACHE_TTL;
+  if (cached) {
+    try {
+      icalEvents = parseIcal(cached.text);
+      document.getElementById('ical-setup').style.display = 'none';
+      renderTimetableTabs();
+      renderTimetable();
+    } catch(_) {}
+  } else if (col1) {
+    col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Lade Stundenplan …</div>';
+  }
+
+  // 2. Wenn Cache frisch ist, nicht erneut über Netz laden
+  if (fresh) return;
+
+  // 3. Im Hintergrund aktualisieren (stale-while-revalidate)
   try {
     const resp = await fetchWithProxy(url);
     const text = await resp.text();
     if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Kein iCal');
+    writeIcalCache(url, text);
     icalEvents = parseIcal(text);
     document.getElementById('ical-setup').style.display = 'none';
     renderTimetableTabs();
     renderTimetable();
   } catch(e) {
-    if (col1) col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Konnte Stundenplan nicht laden — bitte Seite neu laden.</div>';
+    if (!cached && col1) {
+      col1.innerHTML = '<div style="padding:1rem;font-size:.8rem;color:var(--muted);font-weight:300;position:relative;">Konnte Stundenplan nicht laden — bitte Seite neu laden.</div>';
+    }
+    // Wenn Cache da war: einfach den (leicht veralteten) gecachten Stand stehen lassen.
   }
 }
 
@@ -1411,6 +1627,7 @@ function buildMensaNav() {
   });
 }
 
+// Speed: alle Quellen parallel, erste valide JSON-Antwort gewinnt
 async function fetchMensaData(targetUrl) {
   const proxyUrls = [
     targetUrl, // direct
@@ -1418,16 +1635,32 @@ async function fetchMensaData(targetUrl) {
     `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];
-  for (const url of proxyUrls) {
-    try {
-      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
-      if (!resp.ok) continue;
-      const text = await resp.text();
-      if (!text || text.length < 5) continue;
-      try { return JSON.parse(text); } catch(_) { continue; }
-    } catch(_) {}
-  }
-  return null;
+  const attempts = proxyUrls.map(url =>
+    fetch(url, { signal: AbortSignal.timeout(5000) }).then(async r => {
+      if (!r.ok) throw new Error('not ok');
+      const text = await r.text();
+      if (!text || text.length < 5) throw new Error('empty');
+      return JSON.parse(text); // wirft bei Müll → andere Quellen können noch gewinnen
+    })
+  );
+  try { return await Promise.any(attempts); } catch(_) { return null; }
+}
+
+// Speed: persistenter Cache (localStorage) zusätzlich zum In-Memory-Cache
+const MENSA_LS_PREFIX = 'mensa_v1_';
+const MENSA_LS_TTL = 2 * 60 * 60 * 1000; // 2 Stunden
+
+function readMensaCache(dateStr) {
+  try {
+    const raw = localStorage.getItem(MENSA_LS_PREFIX + dateStr);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if ((Date.now() - obj.ts) > MENSA_LS_TTL) return null;
+    return obj.data;
+  } catch(_) { return null; }
+}
+function writeMensaCache(dateStr, data) {
+  try { localStorage.setItem(MENSA_LS_PREFIX + dateStr, JSON.stringify({ ts: Date.now(), data })); } catch(_) {}
 }
 
 async function loadMensaDay(dateStr) {
@@ -1436,7 +1669,17 @@ async function loadMensaDay(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
   lbl.textContent = DAY_NAMES_FULL[d.getDay()] + ', ' + d.getDate() + '. ' + MONTH_NAMES[d.getMonth()];
 
+  // In-Memory-Cache (innerhalb der Session)
   if (MENSA_DAYS_CACHE[dateStr]) { renderMensa(MENSA_DAYS_CACHE[dateStr]); return; }
+
+  // localStorage-Cache (überlebt Reloads, gilt 2h)
+  const ls = readMensaCache(dateStr);
+  if (ls) {
+    MENSA_DAYS_CACHE[dateStr] = ls;
+    renderMensa(ls);
+    return;
+  }
+
   grid.innerHTML = '<div class="mensa-empty">Lade Speiseplan …</div>';
 
   // Try multiple location IDs in parallel: 101 = Mensa BS TU 1, 102 = Tageslager
@@ -1461,6 +1704,7 @@ async function loadMensaDay(dateStr) {
   }
 
   MENSA_DAYS_CACHE[dateStr] = merged;
+  writeMensaCache(dateStr, merged);
   renderMensa(merged);
 }
 
