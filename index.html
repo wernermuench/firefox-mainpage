@@ -15,7 +15,9 @@
 <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
 <link rel="dns-prefetch" href="https://www.google.com">
 <link rel="dns-prefetch" href="https://api.codetabs.com">
-<script src="https://accounts.google.com/gsi/client" async></script>
+<!-- Speed: Google-Login-Script (gsi/client) wird NICHT mehr beim Start geladen,
+     sondern erst on-demand beim Klick auf "Verbinden" (siehe loadGsiScript()). -->
+
 <style>
   :root {
     --bg:      #0d0d10;
@@ -100,7 +102,9 @@
         rgba(120,170,180,0.02) 50%,
         rgba(120,170,180,0.01) 70%,
         transparent 85%);
-    filter: blur(30px);
+    /* Speed: Blur von 30px auf 8px reduziert. Full-Screen-Blur ist in Firefox
+       teuer beim Kompositing; die weichen Alpha-Stops oben glätten ohnehin schon. */
+    filter: blur(8px);
     pointer-events:none; z-index:0;
   }
 
@@ -836,7 +840,51 @@ const WMO = {0:'Klar',1:'Meist klar',2:'Teilw. bewölkt',3:'Bedeckt',45:'Nebel',
 
 let wxData = null; // global weather data cache
 
+function renderWeather(d, city) {
+  wxData = d;
+  const c = d.current;
+  document.getElementById('w-temp').textContent = Math.round(c.temperature_2m) + '°';
+  document.getElementById('w-temp').style.color = '';
+  document.getElementById('w-temp').style.fontSize = '';
+  document.getElementById('w-desc').textContent = WMO[c.weathercode] || '';
+  document.getElementById('w-city').textContent = city;
+  document.getElementById('w-hi-lo').textContent =
+    '↑' + Math.round(d.daily.temperature_2m_max[0]) + '°  ↓' + Math.round(d.daily.temperature_2m_min[0]) + '°  Gefühlt ' + Math.round(c.apparent_temperature) + '°';
+  // current UV index (not daily max)
+  const uv = parseFloat(c.uv_index).toFixed(1);
+  const uvRound = Math.round(uv);
+  const uvLabel = uvRound <= 2 ? 'Niedrig' : uvRound <= 5 ? 'Mittel' : uvRound <= 7 ? 'Hoch' : uvRound <= 10 ? 'Sehr hoch' : 'Extrem';
+  const uvColor2 = uvRound <= 2 ? '#6db87a' : uvRound <= 5 ? '#c9a96e' : uvRound <= 7 ? '#e07c45' : uvRound <= 10 ? '#c95f5f' : '#a06bbf';
+  const uvEl = document.getElementById('w-uv');
+  uvEl.textContent = 'UV ' + uv + ' · ' + uvLabel;
+  uvEl.style.color = uvColor2;
+  const rainProb = d.daily.precipitation_probability_max?.[0];
+  if (rainProb != null) {
+    document.getElementById('w-rain-prob').textContent = '☂ ' + rainProb + '%';
+  }
+}
+
+// Speed: localStorage-Cache (30 Min). Beim Start sofort den letzten Stand zeigen,
+// nur bei abgelaufenem Cache übers Netz neu laden.
+const WX_CACHE_KEY = 'wx_cache_v1';
+const WX_CACHE_TTL = 30 * 60 * 1000; // 30 Minuten
+
 async function loadWeather(lat, lon, city) {
+  // 1. Cache sofort anzeigen (falls vorhanden)
+  let fresh = false;
+  try {
+    const raw = localStorage.getItem(WX_CACHE_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj.city === city && obj.data) {
+        renderWeather(obj.data, city);
+        fresh = (Date.now() - obj.ts) < WX_CACHE_TTL;
+      }
+    }
+  } catch(_) {}
+  if (fresh) return; // Cache frisch genug – kein Netz nötig
+
+  // 2. Im Hintergrund frisch laden
   try {
     const d = await (await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
@@ -845,27 +893,8 @@ async function loadWeather(lat, lon, city) {
       `&daily=temperature_2m_max,temperature_2m_min,uv_index_max,weathercode,precipitation_probability_max,windspeed_10m_max,sunrise,sunset` +
       `&timezone=auto&forecast_days=7`
     )).json();
-    wxData = d;
-    const c = d.current;
-    document.getElementById('w-temp').textContent = Math.round(c.temperature_2m) + '°';
-    document.getElementById('w-temp').style.color = '';
-    document.getElementById('w-temp').style.fontSize = '';
-    document.getElementById('w-desc').textContent = WMO[c.weathercode] || '';
-    document.getElementById('w-city').textContent = city;
-    document.getElementById('w-hi-lo').textContent =
-      '↑' + Math.round(d.daily.temperature_2m_max[0]) + '°  ↓' + Math.round(d.daily.temperature_2m_min[0]) + '°  Gefühlt ' + Math.round(c.apparent_temperature) + '°';
-    // current UV index (not daily max)
-    const uv = parseFloat(c.uv_index).toFixed(1);
-    const uvRound = Math.round(uv);
-    const uvLabel = uvRound <= 2 ? 'Niedrig' : uvRound <= 5 ? 'Mittel' : uvRound <= 7 ? 'Hoch' : uvRound <= 10 ? 'Sehr hoch' : 'Extrem';
-    const uvColor2 = uvRound <= 2 ? '#6db87a' : uvRound <= 5 ? '#c9a96e' : uvRound <= 7 ? '#e07c45' : uvRound <= 10 ? '#c95f5f' : '#a06bbf';
-    const uvEl = document.getElementById('w-uv');
-    uvEl.textContent = 'UV ' + uv + ' · ' + uvLabel;
-    uvEl.style.color = uvColor2;
-    const rainProb = d.daily.precipitation_probability_max?.[0];
-    if (rainProb != null) {
-      document.getElementById('w-rain-prob').textContent = '☂ ' + rainProb + '%';
-    }
+    try { localStorage.setItem(WX_CACHE_KEY, JSON.stringify({ city, ts: Date.now(), data: d })); } catch(_) {}
+    renderWeather(d, city);
   } catch(_) {}
 }
 
@@ -1423,7 +1452,23 @@ let gTaskListId = null;
 let gTokenClient = null;
 let useGoogle = false;
 
-function signInGoogle() {
+// Speed: GSI-Script erst hier laden (nicht beim Seitenstart)
+let gsiScriptPromise = null;
+function loadGsiScript() {
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  if (gsiScriptPromise) return gsiScriptPromise;
+  gsiScriptPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return gsiScriptPromise;
+}
+
+async function signInGoogle() {
   const btn = document.getElementById('gtask-auth-btn');
   const status = document.getElementById('gtask-status');
   if (GOOGLE_CLIENT_ID.includes('DEINE')) {
@@ -1431,6 +1476,8 @@ function signInGoogle() {
     status.style.color = '#e07c45';
     return;
   }
+  try { await loadGsiScript(); }
+  catch(_) { status.textContent = 'Google-Login-Script konnte nicht geladen werden.'; status.style.color = '#c95f5f'; return; }
   if (!gTokenClient) {
     gTokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
@@ -1592,7 +1639,7 @@ async function fetchWithProxy(targetUrl) {
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];
   const attempts = candidates.map(url =>
-    fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => {
+    fetch(url, { signal: AbortSignal.timeout(3500) }).then(r => {
       if (!r.ok) throw new Error('not ok');
       return r;
     })
@@ -1877,7 +1924,7 @@ async function fetchMensaData(targetUrl) {
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];
   const attempts = proxyUrls.map(url =>
-    fetch(url, { signal: AbortSignal.timeout(5000) }).then(async r => {
+    fetch(url, { signal: AbortSignal.timeout(3500) }).then(async r => {
       if (!r.ok) throw new Error('not ok');
       const text = await r.text();
       if (!text || text.length < 5) throw new Error('empty');
@@ -1903,6 +1950,22 @@ function readMensaCache(dateStr) {
 function writeMensaCache(dateStr, data) {
   try { localStorage.setItem(MENSA_LS_PREFIX + dateStr, JSON.stringify({ ts: Date.now(), data })); } catch(_) {}
 }
+
+// Speed: abgelaufene Mensa-Cache-Einträge beim Start aufräumen, damit sich
+// nicht über Wochen hunderte alte Keys in localStorage ansammeln.
+(function pruneMensaCache() {
+  try {
+    const now = Date.now();
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(MENSA_LS_PREFIX)) continue;
+      try {
+        const obj = JSON.parse(localStorage.getItem(k));
+        if (!obj || (now - obj.ts) > MENSA_LS_TTL) localStorage.removeItem(k);
+      } catch(_) { localStorage.removeItem(k); }
+    }
+  } catch(_) {}
+})();
 
 async function loadMensaDay(dateStr) {
   const grid = document.getElementById('mensa-grid');
