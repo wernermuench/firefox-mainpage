@@ -102,9 +102,10 @@
         rgba(120,170,180,0.02) 50%,
         rgba(120,170,180,0.01) 70%,
         transparent 85%);
-    /* Speed: Blur von 30px auf 8px reduziert. Full-Screen-Blur ist in Firefox
-       teuer beim Kompositing; die weichen Alpha-Stops oben glätten ohnehin schon. */
-    filter: blur(8px);
+    /* Speed: KEIN filter: blur() mehr. Ein bildschirmfüllender Blur wird von
+       Firefox bei jedem Neuzeichnen (Cursor-Blinken, Uhr, Maus) neu berechnet
+       und war die Hauptursache fürs Dauerruckeln. Die Farbverläufe oben faden
+       ohnehin schon weich auf transparent, der Blur ist optisch kaum nötig. */
     pointer-events:none; z-index:0;
   }
 
