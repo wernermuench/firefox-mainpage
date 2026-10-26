@@ -328,6 +328,17 @@ try { if (localStorage.getItem('theme') === 'light') document.documentElement.da
   }
   #uni-panel { display:none; width:100%; margin-top: 1.5rem; }
 
+  .calendar-settings { margin-bottom: 11px; }
+  .calendar-settings summary {
+    display:flex; align-items:center; gap:8px; width:fit-content; margin-left:auto;
+    padding:8px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--surface); color:var(--muted); font-size:.85rem;
+    cursor:pointer; list-style:none;
+  }
+  .calendar-settings summary::-webkit-details-marker { display:none; }
+  .calendar-settings summary:hover, .calendar-settings[open] summary { color:var(--text); border-color:var(--accent); }
+  .calendar-settings[open] summary { margin-bottom:10px; }
+  .calendar-settings summary span { font-size:1.2rem; line-height:1; }
   .uni-ical-setup {
     background: var(--surface); border: 0.5px solid var(--border);
     border-radius: var(--r); padding: 1.2rem 1.4rem; margin-bottom: 11px;
@@ -335,6 +346,8 @@ try { if (localStorage.getItem('theme') === 'light') document.documentElement.da
   }
   .uni-ical-setup p { font-size:0.82rem; color:var(--muted); font-weight:300; line-height:1.6; }
   .uni-ical-setup code { font-size:0.75rem; background:rgba(255,255,255,0.06); padding:1px 7px; border-radius:4px; color:var(--accent); }
+  .ical-file-input { width:100%; min-width:0; color:var(--muted); font:inherit; font-size:.85rem; }
+  .ical-file-input::file-selector-button { background:var(--accent); color:white; border:0; border-radius:8px; padding:.6rem 1rem; margin-right:10px; cursor:pointer; }
   .ical-input-row { display:flex; gap:8px; }
   .ical-url-input {
     flex:1; background:var(--bg); border:0.5px solid var(--border); border-radius:8px;
@@ -581,7 +594,9 @@ try { if (localStorage.getItem('theme') === 'light') document.documentElement.da
     .bm-grid { grid-template-columns:repeat(auto-fill,minmax(95px,1fr)); gap:8px; }
     .cat-btn { padding:6px 11px; }
     .tt-header, .tt-body { min-width:650px; }
-    .ical-input-row { flex-wrap:wrap; }
+    .ical-file-input { width:100%; min-width:0; color:var(--muted); font:inherit; font-size:.85rem; }
+  .ical-file-input::file-selector-button { background:var(--accent); color:white; border:0; border-radius:8px; padding:.6rem 1rem; margin-right:10px; cursor:pointer; }
+  .ical-input-row { flex-wrap:wrap; }
     .ical-url-input { min-width:0; width:100%; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -761,18 +776,23 @@ const ENGINES = {
       </div>
     </div>
     <div id="uni-panel" style="display:none;">
-      <div class="uni-ical-setup" id="ical-setup">
-        <div class="sec-label">Stud.IP Stundenplan einbinden</div>
-        <p>
-          1. Öffne Stud.IP → <code>Kalender</code> → <code>Kalender exportieren</code><br>
-          2. Kopiere die <strong>iCal-URL</strong> und füge sie hier ein:
-        </p>
-        <div class="ical-input-row">
-          <input class="ical-url-input" id="ical-url-input" type="text" placeholder="https://studip.tu-braunschweig.de/…/ical?token=…">
-          <button class="ical-save-btn" onclick="saveIcalUrl()">Speichern</button>
+      <details class="calendar-settings" id="calendar-settings">
+        <summary title="Kalenderlink ändern"><span aria-hidden="true">⚙</span> Kalendereinstellungen</summary>
+        <div class="uni-ical-setup" id="ical-setup">
+          <label class="sec-label" for="ical-file-input">Kalenderdatei importieren</label>
+          <p>Lade deinen Stud.IP-Kalender als <code>.ics</code>-Datei herunter und wähle ihn hier aus. Die Datei bleibt auf diesem Gerät. Bei Änderungen im Stundenplan bitte erneut importieren.</p>
+          <input class="ical-file-input" id="ical-file-input" type="file" accept=".ics,text/calendar" onchange="importIcalFile(this.files[0])" aria-describedby="ical-settings-feedback">
+          <hr style="border:0;border-top:1px solid var(--border);margin:.5rem 0;">
+          <label class="sec-label" for="ical-url-input">Alternativ: Kalenderlink ändern</label>
+          <p>Füge hier deinen iCal-Abonnementlink ein. In Stud.IP findest du ihn unter <code>Kalender → Kalender exportieren</code>.</p>
+          <div class="ical-input-row">
+            <input class="ical-url-input" id="ical-url-input" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://…/kalender.ics" onkeydown="if(event.key === 'Enter') { event.preventDefault(); saveIcalUrl(); }" aria-describedby="ical-settings-feedback">
+            <button class="ical-save-btn" onclick="saveIcalUrl()">Speichern</button>
+          </div>
+          <p id="ical-settings-feedback" role="status">Der Link wird in diesem Browser gespeichert.</p>
         </div>
-      </div>
-      <div class="panel-actions"><p id="ical-status" class="panel-status" role="status">Stundenplan wird beim Öffnen geladen.</p><button class="ical-save-btn" onclick="ensureTimetable(true)">Aktualisieren</button></div>
+      </details>
+      <div class="panel-actions"><p id="ical-status" class="panel-status" role="status">Stundenplan wird beim Öffnen geladen.</p><button id="ical-refresh-btn" class="ical-save-btn" onclick="refreshCalendar()">Aktualisieren</button></div>
       <div class="tt-wrap">
         <div class="tt-header">
           <div class="tt-header-corner"></div>
@@ -1672,12 +1692,92 @@ const WEEK_FULL = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freita
 let icalEvents = [];
 let ttDay = new Date().getDay(); // default today
 
+let importedCalendar = null;
+let calendarSource = store.getItem('ical_source') === 'file' ? 'file' : 'link';
+let icalSourceVersion = 0;
+try {
+  const saved = JSON.parse(store.getItem('ical_file_v1') || 'null');
+  if (saved && typeof saved.text === 'string' && saved.text.includes('BEGIN:VCALENDAR') && saved.text.includes('END:VCALENDAR')) importedCalendar = saved;
+} catch (_) {}
+
+function refreshCalendar() {
+  if (calendarSource === 'file') {
+    document.getElementById('calendar-settings').open = true;
+    document.getElementById('ical-file-input').click();
+  } else return ensureTimetable(true);
+}
+function showImportedCalendar() {
+  const action = document.getElementById('ical-refresh-btn');
+  action.textContent = 'Datei ersetzen';
+  if (!importedCalendar) {
+    document.getElementById('calendar-settings').open = true;
+    setIcalStatus('Bitte eine .ics-Datei auswählen.');
+    return;
+  }
+  icalEvents = parseIcal(importedCalendar.text);
+  renderTimetable();
+  const count = icalEvents.length;
+  setIcalStatus('Datei: ' + importedCalendar.name + ' · ' + count + ' Termine · aktuelle Woche' +
+    (importedCalendar.sessionOnly ? ' · nur für diese Sitzung gespeichert' : ' · lokal gespeichert'));
+}
+async function importIcalFile(file) {
+  if (!file) return;
+  const feedback = document.getElementById('ical-settings-feedback');
+  try {
+    if (file.size > 3000000) throw new Error('Die Datei ist zu groß (maximal 3 MB).');
+    const text = await file.text();
+    if (!text.includes('BEGIN:VCALENDAR') || !text.includes('END:VCALENDAR')) throw new Error('Bitte eine gültige .ics-Kalenderdatei auswählen.');
+    parseIcal(text); // Vorhandenen Kalender bei ungültigen Dateien beibehalten.
+    const record = {name: file.name || 'Kalender.ics', text, importedAt: Date.now()};
+    const serialized = JSON.stringify(record);
+    store.setItem('ical_file_v1', serialized);
+    store.setItem('ical_source', 'file');
+    record.sessionOnly = store.getItem('ical_file_v1') !== serialized || store.getItem('ical_source') !== 'file';
+    importedCalendar = record;
+    calendarSource = 'file';
+    ++icalSourceVersion;
+    icalLoadedUrl = null;
+    showImportedCalendar();
+    feedback.textContent = record.sessionOnly ? 'Datei eingelesen. Dauerhaftes Speichern ist blockiert oder der Speicher ist voll; nach einem Neustart erneut auswählen.' : 'Datei importiert und lokal gespeichert. Bei Stundenplanänderungen eine neue Datei auswählen.';
+    document.getElementById('calendar-settings').open = !!record.sessionOnly;
+  } catch (error) {
+    feedback.textContent = error.message || 'Die Kalenderdatei konnte nicht gelesen werden.';
+    document.getElementById('calendar-settings').open = true;
+  } finally {
+    document.getElementById('ical-file-input').value = '';
+  }
+}
+
 async function saveIcalUrl() {
-  const url = document.getElementById('ical-url-input').value.trim();
-  if (!url) return;
+  const input = document.getElementById('ical-url-input');
+  const feedback = document.getElementById('ical-settings-feedback');
+  const url = input.value.trim().replace(/^webcal:\/\//i, 'https://');
+  try {
+    const parsed = new URL(url);
+    if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('protocol');
+  } catch (_) {
+    feedback.textContent = 'Bitte einen gültigen Kalenderlink mit https:// oder webcal:// eingeben.';
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+    return;
+  }
+  input.setAttribute('aria-invalid', 'false');
   store.setItem('ical_url', url);
+  if (store.getItem('ical_url') !== url) {
+    feedback.textContent = 'Der Link konnte nicht gespeichert werden. Bitte erlaube lokale Website-Daten für diese Seite.';
+    return;
+  }
+  calendarSource = 'link';
+  store.setItem('ical_source', 'link');
+  ++icalSourceVersion;
+  document.getElementById('ical-refresh-btn').textContent = 'Aktualisieren';
+  input.value = url;
+  feedback.textContent = 'Kalenderlink gespeichert.';
+  document.getElementById('calendar-settings').open = false;
   if (icalPending) await icalPending;
+  icalEvents = [];
   icalLoadedUrl = null;
+  renderTimetable();
   return ensureTimetable(true);
 }
 
@@ -1723,6 +1823,8 @@ function writeIcalCache(url, text) {
 let icalPending = null, icalLoadedUrl = null;
 function setIcalStatus(message) { document.getElementById('ical-status').textContent = message; }
 function ensureTimetable(force = false) {
+  if (calendarSource === 'file') { showImportedCalendar(); return; }
+  document.getElementById('ical-refresh-btn').textContent = 'Aktualisieren';
   const url = store.getItem('ical_url');
   if (!url) { setIcalStatus('Bitte eine iCal-Adresse eintragen.'); return; }
   if (icalPending) return icalPending;
@@ -1732,6 +1834,7 @@ function ensureTimetable(force = false) {
 }
 async function loadIcal(url, force = false) {
   if (!url) return;
+  const version = icalSourceVersion;
   const cached = readIcalCache(url);
   let hasCache = false;
   if (cached && typeof cached.text === 'string' && cached.text.includes('BEGIN:VCALENDAR')) {
@@ -1745,6 +1848,7 @@ async function loadIcal(url, force = false) {
   setIcalStatus(hasCache ? 'Gespeicherten Stundenplan aktualisieren …' : 'Stundenplan laden …');
   try {
     const text = await fetchTextWithFallback(url, t => t.includes('BEGIN:VCALENDAR') && t.includes('END:VCALENDAR'));
+    if (version !== icalSourceVersion) return;
     const events = parseIcal(text);
     writeIcalCache(url, text);
     icalEvents = events;
@@ -1752,6 +1856,7 @@ async function loadIcal(url, force = false) {
     renderTimetable();
     setIcalStatus(events.length ? 'Stundenplan aktualisiert · aktuelle Woche' : 'Dieser Kalender enthält keine Termine.');
   } catch (_) {
+    if (version !== icalSourceVersion) return;
     setIcalStatus(hasCache ? 'Offline: gespeicherter Stundenplan wird angezeigt.' : 'Stundenplan nicht erreichbar. Du kannst es über „Aktualisieren“ erneut versuchen.');
   }
 }
